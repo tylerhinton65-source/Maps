@@ -83,8 +83,16 @@
   .rb.on { background: var(--c, var(--red)); color: white !important; }
   .rb .tip { display: none; position: absolute; right: 54px; top: 50%; transform: translateY(-50%); background: var(--ink); color: white; font-size: 12px; font-weight: 600; padding: 6px 10px; border-radius: 8px; white-space: nowrap; pointer-events: none; }
   .rb:hover .tip { display: block; }
-  #basePanel { display: none; position: absolute; top: 16px; right: 80px; z-index: 1001; width: 210px; background: white; border-radius: 14px; box-shadow: var(--shadow); padding: 12px; flex-direction: column; gap: 6px; }
-  #basePanel.open { display: flex; }
+  #basePanel, #racePanel { display: none; position: absolute; top: 16px; right: 80px; z-index: 1001; width: 210px; background: white; border-radius: 14px; box-shadow: var(--shadow); padding: 12px; flex-direction: column; gap: 6px; }
+  #basePanel.open, #racePanel.open { display: flex; }
+  #racePanel { width: 240px; top: 66px; max-height: calc(100vh - 100px); overflow-y: auto; }
+  #racePanel h5 { margin: 0 0 4px; font-size: 11px; font-weight: 700; color: var(--red-dark); text-transform: uppercase; letter-spacing: .06em; }
+  .raceGroup { font-size: 10px; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: .08em; margin: 6px 2px 0; }
+  .raceOpt { height: auto !important; padding: 8px 12px !important; display: flex; flex-direction: column; align-items: flex-start; gap: 1px; }
+  .raceOpt small { font-size: 11px; font-weight: 500; color: #64748b; }
+  .raceOpt.on small { color: #991b1b; }
+  #raceOff { color: #64748b; }
+  .raceNote { margin: 4px 2px 0; font-size: 11px; line-height: 1.45; color: #64748b; }
   #basePanel h5 { margin: 0 0 4px; font-size: 11px; font-weight: 700; color: var(--red-dark); text-transform: uppercase; letter-spacing: .06em; }
   .baseOpt { height: 40px; padding: 0 12px; border: 1px solid var(--line); border-radius: 10px; background: white; color: var(--ink-3); font-size: 13px; text-align: left; }
   .baseOpt.on { border: 2px solid var(--red); background: var(--red-soft); color: #7f1d1d; font-weight: 700; }
@@ -154,7 +162,7 @@
       </button>
       <svg class="spark" aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l1.9 5.6L19.5 9.5l-5.6 1.9L12 17l-1.9-5.6L4.5 9.5l5.6-1.9z"/></svg>
       <label for="askInput" style="position:absolute;left:-9999px">Search or ask</label>
-      <input id="askInput" placeholder="Ask: “Trump over 80% in Wyoming” or “go to Moab”">
+      <input id="askInput" placeholder="Ask: “Trump over 80% in Wyoming”, “go to Moab” or a precinct code">
       <button type="submit" class="btn-red">Search</button>
     </form>
 
@@ -171,13 +179,13 @@
 
       <div id="pane">
         <div data-pane="election" style="display:flex;flex-direction:column;gap:16px;flex:1">
-          <div><h4>Election 2024</h4><div class="sub">Filter precincts by how they voted for president</div></div>
+          <div><h4 id="fTitle">Election 2024</h4><div class="sub" id="fSub">Filter precincts by how they voted for president</div></div>
           <div class="field"><span>State</span>
             <div class="seg" id="fState"><button type="button" data-v="" class="on">Both</button><button type="button" data-v="UT">Utah</button><button type="button" data-v="WY">Wyoming</button></div></div>
           <div class="field"><span>County</span><select id="fCounty" aria-label="County"><option value="">Any county</option></select></div>
           <div class="field"><span>Winner</span>
-            <div class="seg" id="fWinner"><button type="button" data-v="" class="on">Either</button><button type="button" data-v="r">Trump</button><button type="button" data-v="d">Harris</button></div></div>
-          <div class="field"><span>Trump vote share</span>
+            <div class="seg" id="fWinner"><button type="button" data-v="" class="on">Either</button><button type="button" data-v="r" id="fWinR">Trump</button><button type="button" data-v="d" id="fWinD">Harris</button></div></div>
+          <div class="field"><span id="fShareLbl">Trump vote share</span>
             <div class="row"><label>at least <input id="fMin" type="number" min="0" max="100" placeholder="0"></label><label>at most <input id="fMax" type="number" min="0" max="100" placeholder="100"></label>%</div></div>
           <label class="check">Competitive only (within 10 points)<input type="checkbox" id="fClose"></label>
           <div class="paneFoot"><button type="button" class="btn-ghost" id="fReset">Reset</button><button type="button" class="btn-red" id="fApply">Show precincts</button></div>
@@ -198,7 +206,7 @@
 
 <div id="rail">
   <button class="rb on" id="rBase" style="--c:#dc2626;color:#fff" aria-label="Base map" aria-expanded="false"><svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="m12 3 9 5-9 5-9-5zM3 13l9 5 9-5"/></svg><span class="tip">Base map</span></button>
-  <button class="rb" id="rElection" style="--c:#dc2626;color:#f87171" aria-label="Election 2024" aria-pressed="false"><svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M5 20V10M12 20V4M19 20v-7"/></svg><span class="tip">Election 2024</span></button>
+  <button class="rb" id="rElection" style="--c:#dc2626;color:#f87171" aria-label="Election results" aria-expanded="false"><svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M5 20V10M12 20V4M19 20v-7"/></svg><span class="tip">Election results</span></button>
   <button class="rb" id="rLand" style="--c:#16a34a;color:#4ade80" aria-label="Land ownership" aria-pressed="false"><svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M4 20V8l8-4 8 4v12z"/></svg><span class="tip">Land ownership</span></button>
   <button class="rb on" id="rStates" style="--c:#475569;color:#cbd5e1" aria-label="State outlines" aria-pressed="true"><svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-dasharray="3 2.5"><rect x="4" y="4" width="16" height="16" rx="2"/></svg><span class="tip">State outlines</span></button>
 </div>
@@ -211,8 +219,23 @@
   <button class="baseOpt" data-base="USGS">USGS topo (detailed)</button>
 </div>
 
+<div id="racePanel" role="dialog" aria-label="Election results">
+  <h5>Election results</h5>
+  <div class="raceGroup">2024</div>
+  <button class="baseOpt raceOpt" data-race="p2024">President<small>Utah + Wyoming</small></button>
+  <div class="raceGroup">2026</div>
+  <button class="baseOpt raceOpt" data-race="house">U.S. House<small>Wyoming + Utah County</small></button>
+  <button class="baseOpt raceOpt" data-race="sen">U.S. Senate<small>Wyoming</small></button>
+  <button class="baseOpt raceOpt" data-race="gov">Governor<small>Wyoming</small></button>
+  <button class="baseOpt raceOpt" data-race="sth">State House<small>Utah County</small></button>
+  <button class="baseOpt raceOpt" data-race="amdA">Amendment A<small>Utah County · publishing amendments online</small></button>
+  <button class="baseOpt raceOpt" data-race="amdB">Amendment B<small>Utah County · ballot initiatives</small></button>
+  <button class="baseOpt" id="raceOff">Hide results</button>
+  <p class="raceNote">2026 results: Wyoming and Utah County are official (canvassed). Other Utah counties will be added as they post precinct reports.</p>
+</div>
+
 <div id="legends">
-  <div class="legend" id="lgElection"><b>2024 president</b><div class="ramp" id="ramp"></div><div class="ramp-labels"><span>Trump +60</span><span>Even</span><span>Harris +60</span></div></div>
+  <div class="legend" id="lgElection"><b id="lgTitle">2024 president</b><div class="ramp" id="ramp"></div><div class="ramp-labels"><span id="lgR">Trump +60</span><span>Even</span><span id="lgD">Harris +60</span></div></div>
   <div class="legend" id="lgLand"><b>Land ownership</b><div class="keys">
     <span><i style="background:#fee67a"></i>BLM</span><span><i style="background:#cde3a6"></i>Forest Service</span>
     <span><i style="background:#cab3d6"></i>National Park</span><span><i style="background:#9dc8e4"></i>State</span>
@@ -224,8 +247,8 @@
   <div class="name" id="cName"></div>
   <div class="lead" id="cLead"></div>
   <div class="bar"><div id="bRep" style="background:var(--rep)"></div><div id="bOth" style="background:var(--other)"></div><div id="bDem" style="background:var(--dem)"></div></div>
-  <div class="cand"><span class="dot" style="background:var(--rep)"></span><span>Trump</span><span class="votes" id="vRep"></span><span class="pct" id="pRep"></span></div>
-  <div class="cand"><span class="dot" style="background:var(--dem)"></span><span>Harris</span><span class="votes" id="vDem"></span><span class="pct" id="pDem"></span></div>
+  <div class="cand"><span class="dot" style="background:var(--rep)"></span><span id="nRep">Trump</span><span class="votes" id="vRep"></span><span class="pct" id="pRep"></span></div>
+  <div class="cand"><span class="dot" style="background:var(--dem)"></span><span id="nDem">Harris</span><span class="votes" id="vDem"></span><span class="pct" id="pDem"></span></div>
   <div class="cand"><span class="dot" style="background:var(--other)"></span><span>Other</span><span class="votes" id="vOth"></span><span class="pct" id="pOth"></span></div>
   <div class="foot"><span id="cTotal"></span><span id="cBoundary"></span></div>
 </div>
@@ -272,13 +295,32 @@ const landOwnership = L.tileLayer(
   "https://gis.blm.gov/arcgis/rest/services/lands/BLM_Natl_SMA_Cached_without_PriUnk/MapServer/tile/{z}/{y}/{x}",
   { ...fast, maxZoom: 19, opacity: 0.55, attribution: "BLM Surface Management Agency" });
 
-// ---------- 2024 election by precinct (NYT) ----------
+// ---------- Election results by precinct ----------
+// 2024: NYT. 2026: Wyoming SOS + Utah County official precinct reports (data/precincts-2026.geojson).
+const F26 = "data/precincts-2026.geojson";
+const NYT = 'Election data: <a href="https://github.com/nytimes/presidential-precinct-map-2024">The New York Times</a> (non-commercial use)';
+const SRC26 = 'Results: <a href="https://sos.wyo.gov/Elections/Docs/2026/2026GeneralResults.aspx">Wyoming SOS</a>, <a href="https://vote.utahcounty.gov/results">Utah County Elections</a>; boundaries: NYT (WY), <a href="https://gis.utah.gov/data/political/voter-precincts">UGRC</a> (UT)';
+const RACES = {
+  p2024: { file: "data/precincts-2024.geojson", title: "2024 president", r: "Trump", d: "Harris", attr: NYT },
+  house: { file: F26, title: "2026 U.S. House", r: "Republican", d: "Democrat", attr: SRC26 },
+  sen:   { file: F26, title: "2026 U.S. Senate · Wyoming", r: "Hageman", d: "Byrd", attr: SRC26 },
+  gov:   { file: F26, title: "2026 Governor · Wyoming", r: "Barlow", d: "Casner", attr: SRC26 },
+  sth:   { file: F26, title: "2026 State House · Utah County", r: "Republican", d: "Democrat", attr: SRC26 },
+  amdA:  { file: F26, title: "2026 Amendment A · Utah County", r: "Against", d: "For", measure: true, attr: SRC26 },
+  amdB:  { file: F26, title: "2026 Amendment B · Utah County", r: "Against", d: "For", measure: true, attr: SRC26 }
+};
+let race = "p2024";
 const RAMP = ["#a50f15","#de2d26","#fb6a4a","#fcbba1","#c6dbef","#6baed6","#2171b5","#08306b"];
+const RAMP_M = ["#7f2704","#d94801","#fd8d3c","#fdd0a2","#c7e9c0","#74c476","#238b45","#00441b"]; // ballot measures: against ↔ for
+const ramp = () => RACES[race].measure ? RAMP_M : RAMP;
 function marginColor(m) {
-  if (m <= -0.6) return RAMP[0]; if (m <= -0.4) return RAMP[1]; if (m <= -0.2) return RAMP[2]; if (m < 0) return RAMP[3];
-  if (m < 0.2) return RAMP[4]; if (m < 0.4) return RAMP[5]; if (m < 0.6) return RAMP[6]; return RAMP[7];
+  const R = ramp();
+  if (m <= -0.6) return R[0]; if (m <= -0.4) return R[1]; if (m <= -0.2) return R[2]; if (m < 0) return R[3];
+  if (m < 0.2) return R[4]; if (m < 0.4) return R[5]; if (m < 0.6) return R[6]; return R[7];
 }
-$("ramp").innerHTML = RAMP.map(c => `<div style="background:${c}"></div>`).join("");
+const rName = p => (p && p.rn) || RACES[race].r;
+const dName = p => (p && p.dn) || RACES[race].d;
+const short = n => n.split(" ").slice(-1)[0];
 
 let filterFn = null;
 function precinctStyle(f) {
@@ -292,15 +334,27 @@ const precincts = L.geoJSON(null, {
     layer.on("mousemove", e => placeCard(e.originalEvent));
     layer.on("mouseout",  e => { hideCard(); precincts.resetStyle(e.target); });
     layer.on("click",     e => { showCard(f.properties, isTouch); placeCard(e.originalEvent); });
-  },
-  attribution: 'Election data: <a href="https://github.com/nytimes/presidential-precinct-map-2024">The New York Times</a> (non-commercial use)'
+  }
 });
-let precinctData = null, loading = null;
+let precinctData = null, loading = null, shownAttr = null;
+const rawCache = {};
+const getRaw = file => rawCache[file] ||= fetch(file).then(r => { if (!r.ok) throw new Error(r.status); return r.json(); })
+  .catch(e => { delete rawCache[file]; throw e; });
+function syncAttribution() {
+  if (shownAttr) map.attributionControl.removeAttribution(shownAttr);
+  shownAttr = map.hasLayer(precincts) ? RACES[race].attr : null;
+  if (shownAttr) map.attributionControl.addAttribution(shownAttr);
+}
 function loadPrecincts() {
   if (loading) return loading;
+  const k = race;
   setStatus("Loading precincts…");
-  loading = fetch("data/precincts-2024.geojson").then(r => r.json()).then(d => {
-    precinctData = d; precincts.addData(d); setStatus(`${fmt(d.features.length)} precincts loaded`); return d;
+  loading = getRaw(RACES[k].file).then(raw => {
+    if (k !== race) return precinctData;
+    const d = k === "p2024" ? raw : { type: "FeatureCollection", features: raw.features.filter(f => f.properties.races[k]).map(f =>
+      ({ type: "Feature", geometry: f.geometry, properties: { ...f.properties, ...f.properties.races[k], o: 1 } })) };
+    precinctData = d; precincts.clearLayers(); precincts.addData(d);
+    setStatus(`${fmt(d.features.length)} precincts · ${RACES[k].title}`); syncAttribution(); return d;
   }).catch(e => { loading = null; setStatus("Couldn't load precincts"); throw e; });
   return loading;
 }
@@ -322,18 +376,23 @@ function showCard(p, sticky) {
   clearTimeout(cardTimer);
   const oth = Math.max(0, p.t - p.r - p.d);
   const pr = pct(p.r, p.t), pd = pct(p.d, p.t), po = pct(oth, p.t);
-  $("cWhere").textContent = `${p.c} County, ${p.s === "UT" ? "Utah" : "Wyoming"}`;
+  const R = RACES[race], ms = R.measure;
+  $("cWhere").textContent = `${p.c} County, ${p.s === "UT" ? "Utah" : "Wyoming"} · ${R.title.replace(/ · .*/, "")}${p.dist ? " · " + p.dist : ""}`;
   $("cName").textContent = `Precinct ${p.n}`;
   const rep = p.m < 0;
-  $("cLead").textContent = `${rep ? "Trump" : "Harris"} +${Math.abs(p.m * 100).toFixed(1)}`;
-  $("cLead").style.background = rep ? "#fee2e2" : "#dbeafe";
-  $("cLead").style.color = rep ? "#b91c1c" : "#1d4ed8";
+  $("cLead").textContent = p.m === 0 ? "Tied" : `${rep ? (ms ? "Against" : short(rName(p))) : (ms ? "For" : short(dName(p)))} +${Math.abs(p.m * 100).toFixed(1)}`;
+  $("cLead").style.background = ms ? (rep ? "#ffedd5" : "#dcfce7") : rep ? "#fee2e2" : "#dbeafe";
+  $("cLead").style.color = ms ? (rep ? "#c2410c" : "#15803d") : rep ? "#b91c1c" : "#1d4ed8";
+  $("nRep").textContent = rName(p); $("nDem").textContent = dName(p);
+  $("bRep").style.background = ms ? RAMP_M[1] : "var(--rep)"; $("bDem").style.background = ms ? RAMP_M[6] : "var(--dem)";
+  $("nRep").previousElementSibling.style.background = $("bRep").style.background;
+  $("nDem").previousElementSibling.style.background = $("bDem").style.background;
   $("bRep").style.width = pr + "%"; $("bOth").style.width = po + "%"; $("bDem").style.width = pd + "%";
   $("vRep").textContent = fmt(p.r); $("pRep").textContent = pr.toFixed(1) + "%";
   $("vDem").textContent = fmt(p.d); $("pDem").textContent = pd.toFixed(1) + "%";
   $("vOth").textContent = fmt(oth); $("pOth").textContent = po.toFixed(1) + "%";
-  $("cTotal").textContent = `${fmt(p.t)} total votes`;
-  $("cBoundary").textContent = p.o ? "Official boundary" : "Estimated boundary";
+  $("cTotal").textContent = `${fmt(p.t)} votes` + (p.reg ? ` · ${pct(p.bal, p.reg).toFixed(0)}% turnout` : "");
+  $("cBoundary").textContent = race === "p2024" ? (p.o ? "Official boundary" : "Estimated boundary") : p.split ? "Split precinct · official" : "Official results";
   card.classList.add("show");
   if (sticky) cardTimer = setTimeout(hideCard, 6000);
 }
@@ -352,6 +411,41 @@ function setLayer(id, on) {
   if (r.legend) $(r.legend).classList.toggle("show", on);
 }
 Object.keys(railLayers).forEach(id => $(id).onclick = () => setLayer(id, !map.hasLayer(railLayers[id].layer)));
+const _setLayer = setLayer;
+setLayer = (id, on) => { _setLayer(id, on); if (id === "rElection") { syncAttribution(); markRace(); } };
+
+// ---------- Race picker (opens from the election button) ----------
+function openRacePanel(open) {
+  $("racePanel").classList.toggle("open", open); $("rElection").setAttribute("aria-expanded", open);
+  if (open) { $("basePanel").classList.remove("open"); $("rBase").setAttribute("aria-expanded", "false"); }
+}
+$("rElection").onclick = () => openRacePanel(!$("racePanel").classList.contains("open"));
+$("rBase").addEventListener("click", () => openRacePanel(false));
+function markRace() {
+  const on = map.hasLayer(precincts);
+  document.querySelectorAll(".raceOpt").forEach(b => b.classList.toggle("on", on && b.dataset.race === race));
+}
+function relabel() {
+  const R = RACES[race], ms = R.measure;
+  $("ramp").innerHTML = ramp().map(c => `<div style="background:${c}"></div>`).join("");
+  $("lgTitle").textContent = R.title;
+  $("lgR").textContent = `${ms ? "Against" : race === "p2024" || ["sen", "gov"].includes(race) ? R.r : "Rep."} +60`;
+  $("lgD").textContent = `${ms ? "For" : race === "p2024" || ["sen", "gov"].includes(race) ? R.d : "Dem."} +60`;
+  $("fTitle").textContent = R.title.replace(/^./, c => c.toUpperCase());
+  $("fSub").textContent = ms ? "Filter precincts by how they voted on this measure" : "Filter precincts by how they voted in this race";
+  $("fWinR").textContent = ms ? "Against" : race === "p2024" || ["sen", "gov"].includes(race) ? R.r : "Republican";
+  $("fWinD").textContent = ms ? "For" : race === "p2024" || ["sen", "gov"].includes(race) ? R.d : "Democrat";
+  $("fShareLbl").textContent = `${$("fWinR").textContent} vote share`;
+}
+let lastQuery = null;
+async function setRace(k) {
+  race = k; loading = null; relabel(); openRacePanel(false);
+  if (!map.hasLayer(precincts)) setLayer("rElection", true); else { await loadPrecincts(); syncAttribution(); markRace(); }
+  if (lastQuery) applyTests(...lastQuery);
+}
+document.querySelectorAll(".raceOpt").forEach(b => b.onclick = () => setRace(b.dataset.race));
+$("raceOff").onclick = () => { setLayer("rElection", false); openRacePanel(false); };
+relabel();
 
 // ---------- Filters dropdown ----------
 const COUNTIES = {
@@ -404,10 +498,11 @@ function panelFilter() {
   F.county = $("fCounty").value; F.min = $("fMin").value; F.max = $("fMax").value; F.close = $("fClose").checked;
   if (F.state) add(p => p.s === F.state, F.state === "UT" ? "Utah" : "Wyoming");
   if (F.county) { const [s, c] = F.county.split("|"); add(p => p.s === s && p.c === c, `${c} County`); }
-  if (F.winner === "r") add(p => p.m < 0, "Trump won");
-  if (F.winner === "d") add(p => p.m > 0, "Harris won");
-  if (F.min !== "") { const v = +F.min / 100; add(p => p.r / p.t >= v, `Trump ≥ ${F.min}%`); }
-  if (F.max !== "") { const v = +F.max / 100; add(p => p.r / p.t <= v, `Trump ≤ ${F.max}%`); }
+  const RL = $("fWinR").textContent, DL = $("fWinD").textContent;
+  if (F.winner === "r") add(p => p.m < 0, `${RL} won`);
+  if (F.winner === "d") add(p => p.m > 0, `${DL} won`);
+  if (F.min !== "") { const v = +F.min / 100; add(p => p.r / p.t >= v, `${RL} ≥ ${F.min}%`); }
+  if (F.max !== "") { const v = +F.max / 100; add(p => p.r / p.t <= v, `${RL} ≤ ${F.max}%`); }
   if (F.close) add(p => Math.abs(p.m) <= 0.1, "Within 10 pts");
   return { tests: t, tags };
 }
@@ -426,7 +521,7 @@ function parseQuery(raw) {
   const tests = [], tags = [];
   const add = (fn, tag) => { tests.push(fn); tags.push(tag); };
   const go = q.match(/\b(?:go to|goto|take me to|zoom to|fly to|show me|near|find)\s+(.+?)\s*$/);
-  if (go && !/precinct|trump|harris|county|won|vote|%|competitive|close/.test(go[1])) return { place: go[1].trim() };
+  if (go && !/precinct|trump|harris|county|won|vote|%|competitive|close|over|under/.test(go[1])) return { place: go[1].trim() };
   const saysWY = /\b(wyoming|wy)\b/.test(q);
   const saysUT = /\b(utah|ut)\b(?!\s+(county|co\b))/.test(q);
   const state = saysWY && !saysUT ? "WY" : saysUT && !saysWY ? "UT" : null;
@@ -438,13 +533,17 @@ function parseQuery(raw) {
     ct.push(p => p.c === c && p.s === st); ctag.push(`${c} County${c === "Carbon" && !state ? ` (${st})` : ""}`);
   }
   if (ct.length) add(p => ct.some(t => t(p)), ctag.join(" or "));
-  if (/\b(trump|republicans?|gop|red)\s+(won|wins|win|carried|precincts?)\b|\bwon by trump\b/.test(q)) add(p => p.m < 0, "Trump won");
-  if (/\b(harris|democrats?|democratic|dems?|blue)\s+(won|wins|win|carried|precincts?)\b|\bwon by harris\b/.test(q)) add(p => p.m > 0, "Harris won");
-  const share = /\b(trump|harris)\s+(?:is\s+|got\s+|with\s+)?(over|above|more than|greater than|at least|>=|>|under|below|less than|at most|<=|<)\s*(\d+(?:\.\d+)?)\s*(?:%|percent)?/g;
+  const names = side => [...new Set((precinctData && race !== "p2024" ? precinctData.features : []).map(f => f.properties[side]).filter(Boolean).map(n => short(n).toLowerCase()))].join("|");
+  const RW = ["trump|republicans?|gop|red|against", RACES[race].r.toLowerCase(), names("rn")].filter(Boolean).join("|");
+  const DW = ["harris|democrats?|democratic|dems?|blue|for", RACES[race].d.toLowerCase(), names("dn")].filter(Boolean).join("|");
+  const RL = $("fWinR").textContent, DL = $("fWinD").textContent;
+  if (new RegExp(`\\b(${RW})\\s+(won|wins|win|carried|passed|precincts?)\\b`).test(q)) add(p => p.m < 0, `${RL} won`);
+  if (new RegExp(`\\b(${DW})\\s+(won|wins|win|carried|passed|precincts?)\\b`).test(q)) add(p => p.m > 0, `${DL} won`);
+  const share = new RegExp(`\\b(${RW}|${DW})\\s+(?:is\\s+|got\\s+|with\\s+)?(over|above|more than|greater than|at least|>=|>|under|below|less than|at most|<=|<)\\s*(\\d+(?:\\.\\d+)?)\\s*(?:%|percent)?`, "g");
   let s;
   while ((s = share.exec(q))) {
-    const who = s[1], v = num(s[3]) / 100, key = who === "trump" ? "r" : "d", up = /over|above|more|greater|least|>/.test(s[2]);
-    add(p => { const x = p[key] / p.t; return up ? x >= v : x <= v; }, `${who[0].toUpperCase() + who.slice(1)} ${up ? "≥" : "≤"} ${s[3]}%`);
+    const who = s[1], v = num(s[3]) / 100, key = new RegExp(`^(${RW})$`).test(who) ? "r" : "d", up = /over|above|more|greater|least|>/.test(s[2]);
+    add(p => { const x = p[key] / p.t; return up ? x >= v : x <= v; }, `${key === "r" ? RL : DL} ${up ? "≥" : "≤"} ${s[3]}%`);
   }
   const mg = q.match(/\b(?:margin\s+(?:under|below|less than|within)|within)\s*(\d+(?:\.\d+)?)\s*(?:%|points?|pts)?/);
   if (mg) { const v = num(mg[1]) / 100; add(p => Math.abs(p.m) <= v, `Margin ≤ ${mg[1]} pts`); }
@@ -459,6 +558,7 @@ function parseQuery(raw) {
 
 async function applyTests(tests, tags, label) {
   if (!tests.length) { clearFilter(); return; }
+  lastQuery = [tests, tags, label];
   if (!map.hasLayer(precincts)) setLayer("rElection", true);
   await loadPrecincts();
   filterFn = p => tests.every(t => t(p));
@@ -468,7 +568,7 @@ async function applyTests(tests, tags, label) {
   if (!hits.length) return showResult(`No precincts match ${label}.`, tags);
   let r = 0, d = 0, t = 0;
   hits.forEach(f => { r += f.properties.r; d += f.properties.d; t += f.properties.t; });
-  showResult(`<b>${fmt(hits.length)}</b> precincts · ${fmt(t)} votes · Trump ${pct(r, t).toFixed(1)}% · Harris ${pct(d, t).toFixed(1)}%`, tags);
+  showResult(`<b>${fmt(hits.length)}</b> precincts · ${fmt(t)} votes · ${$("fWinR").textContent} ${pct(r, t).toFixed(1)}% · ${$("fWinD").textContent} ${pct(d, t).toFixed(1)}%`, tags);
   map.fitBounds(L.geoJSON({ type: "FeatureCollection", features: hits }).getBounds(), { padding: [60, 60], maxZoom: 12 });
 }
 
@@ -483,25 +583,40 @@ async function goToPlace(place) {
     showResult(`📍 ${res[0].display_name.split(",").slice(0, 3).join(",")}`, []);
   } catch { showResult("Place search isn't available right now.", []); }
 }
+async function findPrecinct(code) {
+  if (!map.hasLayer(precincts)) setLayer("rElection", true);
+  await loadPrecincts();
+  const c = code.toLowerCase().replace(/^0+/, "");
+  const hit = precinctData.features.find(f => f.properties.n.toLowerCase() === code.toLowerCase())
+    || precinctData.features.find(f => f.properties.n.toLowerCase().replace(/(^|-)0+(?=\d)/g, "$1").split(" ")[0] === c.replace(/(^|-)0+(?=\d)/g, "$1"));
+  if (!hit) return showResult(`No precinct “${code}” in ${RACES[race].title}.`, []);
+  const lyr = precincts.getLayers().find(l => l.feature === hit);
+  map.fitBounds(lyr.getBounds(), { maxZoom: 14, padding: [80, 80] });
+  lyr.setStyle({ weight: 3, color: "#0f172a", opacity: 1 }); lyr.bringToFront();
+  showCard(hit.properties, false); card.classList.add("phone"); card.classList.remove("follow");
+  showResult(`Precinct <b>${hit.properties.n}</b> · ${hit.properties.c} County`, []);
+}
 function showResult(html, tags) {
   $("resultText").innerHTML = html;
   $("resultTags").innerHTML = tags.map(t => `<span class="tag">${t}</span>`).join("");
   $("result").classList.add("show");
 }
 function clearFilter() {
-  filterFn = null; precincts.setStyle(precinctStyle); updateCount(0);
+  filterFn = null; lastQuery = null; precincts.setStyle(precinctStyle); updateCount(0);
   $("result").classList.remove("show"); $("askInput").value = "";
 }
 $("ask").onsubmit = e => {
   e.preventDefault(); openFilters(false);
   const raw = $("askInput").value; if (!raw.trim()) return;
+  const code = raw.trim().match(/^(?:precinct\s+)?([a-z]{0,3}\d[\w-]*)$/i);
+  if (code) return findPrecinct(code[1]);
   const parsed = parseQuery(raw);
   parsed.place ? goToPlace(parsed.place) : applyTests(parsed.tests, parsed.tags, `“${raw}”`);
 };
 $("clearBtn").onclick = () => { clearFilter(); $("fReset").click(); };
 
 // Close menus when clicking the map
-map.on("click", () => { openFilters(false); $("basePanel").classList.remove("open"); });
+map.on("click", () => { openFilters(false); $("basePanel").classList.remove("open"); openRacePanel(false); });
 map.on("mousemove", e => setStatus(`${e.latlng.lat.toFixed(4)}, ${e.latlng.lng.toFixed(4)}`));
 </script>
 </body>
