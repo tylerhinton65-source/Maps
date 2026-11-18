@@ -300,7 +300,7 @@
   <button class="raceOpt" data-race="p2024"><span class="rIc"><svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.5l2.6 5.3 5.9.9-4.3 4.1 1 5.8L12 16.8l-5.2 2.8 1-5.8-4.3-4.1 5.9-.9z"/></svg></span><span class="rTx">President<small>Utah + Wyoming</small></span></button>
   <div class="raceGroup">2026</div>
   <button class="raceOpt" data-race="gov"><span class="rIc"><svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 20h18M5 20v-8M19 20v-8M9.5 20v-5M14.5 20v-5M3.5 10.5 12 4l8.5 6.5z"/></svg></span><span class="rTx">Governor<small>Wyoming · Utah had no race in 2026</small></span></button>
-  <button class="raceOpt" data-race="house"><span class="rIc"><svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h16M6 20v-6M10 20v-6M14 20v-6M18 20v-6M5 14h14M7.5 14a4.5 4.5 0 0 1 9 0M12 9.5V5.5M12 5.5h2.5"/></svg></span><span class="rTx">U.S. House<small>Utah + Wyoming</small></span></button>
+  <button class="raceOpt" data-race="house"><span class="rIc"><svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h16M6 20v-6M10 20v-6M14 20v-6M18 20v-6M5 14h14M7.5 14a4.5 4.5 0 0 1 9 0M12 9.5V5.5M12 5.5h2.5"/></svg></span><span class="rTx">U.S. House<small>Utah, Wyoming + South Dakota</small></span></button>
   <button class="raceOpt" data-race="sen"><span class="rIc"><svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 21V4M6 4h11l-2.2 4L17 12H6"/></svg></span><span class="rTx">U.S. Senate<small>Wyoming · Utah had no race in 2026</small></span></button>
   <button class="raceOpt" data-race="sth"><span class="rIc"><svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 11l8-6.5 8 6.5M6.5 9.5V20h11V9.5M10.5 20v-5h3v5"/></svg></span><span class="rTx">State House<small>Utah + Wyoming</small></span></button>
   <button class="raceOpt" data-race="ssen"><span class="rIc"><svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM3.5 20a5.5 5.5 0 0 1 11 0M16 5.2a3 3 0 0 1 0 5.6M20.5 20a5.5 5.5 0 0 0-3.5-5.1"/></svg></span><span class="rTx">State Senate<small>Utah + Wyoming · seats up this year</small></span></button>
@@ -381,9 +381,10 @@ const landOwnership = L.tileLayer(
 // plus data/results-2026-statewide.json: WY + Utah County legislature by precinct, Utah county totals, statewide totals.
 const F26 = "data/precincts-2026.geojson";
 const SW = "data/results-2026-statewide.json";
-const COUNTY_URL = "https://tigerweb.geo.census.gov/arcgis/rest/services/TIGERweb/State_County/MapServer/1/query?where=STATE%3D%2749%27&outFields=NAME&maxAllowableOffset=0.002&geometryPrecision=5&outSR=4326&f=geojson";
+const COUNTY_URL = "https://tigerweb.geo.census.gov/arcgis/rest/services/TIGERweb/State_County/MapServer/1/query?where=STATE%20IN%20(%2749%27%2C%2746%27)&outFields=NAME%2CSTATE&maxAllowableOffset=0.002&geometryPrecision=5&outSR=4326&f=geojson";
 const NYT = 'Election data: <a href="https://github.com/nytimes/presidential-precinct-map-2024">The New York Times</a> (non-commercial use)';
-const SRC26 = 'Results: <a href="https://sos.wyo.gov/Elections/Docs/2026/2026GeneralResults.aspx">Wyoming SOS</a>, <a href="https://electionresults.utah.gov/results/public/Utah/elections/General11032026">Utah Lt. Governor</a>, <a href="https://vote.utahcounty.gov/results">Utah County Elections</a>; boundaries: NYT (WY), <a href="https://gis.utah.gov/data/political/voter-precincts">UGRC</a> (UT precincts), Census (UT counties)';
+const SRC26 = 'Results: <a href="https://sos.wyo.gov/Elections/Docs/2026/2026GeneralResults.aspx">Wyoming SOS</a>, <a href="https://electionresults.utah.gov/results/public/Utah/elections/General11032026">Utah Lt. Governor</a>, <a href="https://vote.utahcounty.gov/results">Utah County Elections</a>; boundaries: NYT (WY), <a href="https://gis.utah.gov/data/political/voter-precincts">UGRC</a> (UT precincts), Census (UT + SD counties)'+', <a href="https://electionresults.sd.gov/">South Dakota SOS</a> (unofficial, by county)';
+const SN = { UT: "Utah", WY: "Wyoming", SD: "South Dakota" };
 const RACES = {
   p2024: { file: "data/precincts-2024.geojson", title: "2024 president", r: "Trump", d: "Harris", attr: NYT },
   gov:   { file: F26, title: "2026 Governor", r: "Barlow", d: "Casner", attr: SRC26, none: { UT: "Utah had no governor's race in 2026." } },
@@ -454,10 +455,11 @@ function buildRace(k, raw, sw, cgeo) {
   const have = new Set(feats.filter(f => f.properties.s === "UT").map(f => f.properties.c));
   let nc = 0;
   for (const g of (cgeo ? cgeo.features : [])) {
-    const c = g.properties.NAME.replace(/ County$/, ""), d = (sw.UT.counties[c] || {})[k];
-    if (!d || !d.t || have.has(c)) continue;
+    const st = g.properties.STATE === "46" ? "SD" : "UT";
+    const c = g.properties.NAME.replace(/ County$/, ""), d = ((sw[st] || {}).counties || {})[c]?.[k];
+    if (!d || !d.t || (st === "UT" && have.has(c))) continue;
     const one = d.parts.length === 1 ? d.parts[0] : null;
-    feats.push({ type: "Feature", geometry: g.geometry, properties: { id: "UT-" + c, s: "UT", c, n: c + " County", county: 1,
+    feats.push({ type: "Feature", geometry: g.geometry, properties: { id: st + "-" + c, s: st, c, n: c + " County", county: 1,
       r: d.r, d: d.d, t: d.t, m: d.m, rn: one && one.rn, dn: one && one.dn, dist: d.parts.map(x => x.dist).join(", "), parts: d.parts, o: 1 } });
     nc++;
   }
@@ -476,7 +478,7 @@ function loadPrecincts() {
     const d = { type: "FeatureCollection", features: feats };
     precinctData = d; precincts.clearLayers(); precincts.addData(d);
     const np = feats.length - nc;
-    setStatus(`${fmt(np)} precincts${nc ? ` + ${nc} Utah counties` : ""} · ${RACES[k].title}` + (k !== "p2024" && !cgeo ? " · Utah county outlines unavailable" : ""));
+    setStatus(`${fmt(np)} precincts${nc ? ` + ${nc} counties` : ""} · ${RACES[k].title}` + (k !== "p2024" && !cgeo ? " · county outlines unavailable" : ""));
     syncAttribution(); renderTotals(); return d;
   }).catch(e => { loading = null; setStatus("Couldn't load precincts"); throw e; });
   return loading;
@@ -501,7 +503,7 @@ function showCard(p, sticky) {
   const pr = pct(p.r, p.t), pd = pct(p.d, p.t), po = pct(oth, p.t);
   const R = RACES[race], ms = R.measure;
   $("cWhere").textContent = p.county ? `Utah · ${R.title} · county total`
-    : `${p.c} County, ${p.s === "UT" ? "Utah" : "Wyoming"} · ${R.title.replace(/ · .*/, "")}${p.dist ? " · " + p.dist : ""}`;
+    : `${p.c} County, ${SN[p.s]} · ${R.title.replace(/ · .*/, "")}${p.dist ? " · " + p.dist : ""}`;
   $("cName").textContent = p.county ? `${p.c} County` : `Precinct ${p.n}`;
   const rep = p.m < 0;
   $("cLead").textContent = isTie(p) ? "Tied" : `${rep ? (ms ? "Against" : short(rName(p))) : (ms ? "For" : short(dName(p)))} +${Math.abs(p.m * 100).toFixed(1)}`;
@@ -591,7 +593,7 @@ function voteRows(r, d, t, rn, dn) {
     + row("var(--rep)", rn, r) + row("var(--dem)", dn, d) + row("var(--other)", "Other", o);
 }
 function stateTotals(st, list, k) {
-  const name = st === "UT" ? "Utah" : "Wyoming";
+  const name = SN[st];
   if (!list || !list.length) return `<div class="tState"><h6>${name}</h6><p class="tNone">${esc((RACES[k].none || {})[st] || "No results.")}</p></div>`;
   let r = 0, d = 0, t = 0; list.forEach(x => { r += x.r; d += x.d; t += x.t; });
   if (list.length === 1) {
@@ -618,12 +620,12 @@ async function renderTotals() {
   if (k === "p2024") {
     const raw = await getRaw(R.file), sum = { UT: [0, 0, 0], WY: [0, 0, 0] };
     raw.features.forEach(f => { const p = f.properties, s = sum[p.s]; if (s) { s[0] += p.r; s[1] += p.d; s[2] += p.t; } });
-    html += ["UT", "WY"].map(st => `<div class="tState"><h6>${st === "UT" ? "Utah" : "Wyoming"}<small>${fmt(sum[st][2])} votes</small></h6>${voteRows(sum[st][0], sum[st][1], sum[st][2], R.r, R.d)}</div>`).join("");
+    html += ["UT", "WY"].map(st => `<div class="tState"><h6>${SN[st]}<small>${fmt(sum[st][2])} votes</small></h6>${voteRows(sum[st][0], sum[st][1], sum[st][2], R.r, R.d)}</div>`).join("");
     html += `<p class="tNote">Sum of the precinct results on the map (The New York Times).</p>`;
   } else {
     const sw = await getRaw(SW);
-    html += stateTotals("UT", sw.UT.totals[k], k) + stateTotals("WY", sw.WY.totals[k], k);
-    html += `<p class="tNote">Wyoming: official state canvass. Utah: counties have canvassed; the statewide canvass hasn't certified yet. Margins are winner over runner-up.${k === "ssen" ? " Only about half of each state's senate seats were on the ballot." : ""}</p>`;
+    html += stateTotals("UT", sw.UT.totals[k], k) + stateTotals("WY", sw.WY.totals[k], k) + (sw.SD && sw.SD.totals[k] ? stateTotals("SD", sw.SD.totals[k], k) : "");
+    html += `<p class="tNote">Wyoming: official state canvass. Utah: counties have canvassed; the statewide canvass hasn't certified yet.${sw.SD && sw.SD.totals[k] ? " South Dakota: unofficial Secretary of State results, shown by county (the state doesn't publish precinct results)." : ""} Margins are winner over runner-up.${k === "ssen" ? " Only about half of each state's senate seats were on the ballot." : ""}</p>`;
   }
   if (race === k) body.innerHTML = html;
 }
@@ -688,7 +690,7 @@ function panelFilter() {
   const t = [], tags = [];
   const add = (fn, tag) => { t.push(fn); tags.push(tag); };
   F.county = $("fCounty").value; F.min = $("fMin").value; F.max = $("fMax").value; F.close = $("fClose").checked;
-  if (F.state) add(p => p.s === F.state, F.state === "UT" ? "Utah" : "Wyoming");
+  if (F.state) add(p => p.s === F.state, F.SN[state]);
   if (F.county) { const [s, c] = F.county.split("|"); add(p => p.s === s && p.c === c, `${c} County`); }
   const RL = $("fWinR").textContent, DL = $("fWinD").textContent;
   if (F.winner === "r") add(p => p.m < 0, `${RL} won`);
@@ -717,7 +719,7 @@ function parseQuery(raw) {
   const saysWY = /\b(wyoming|wy)\b/.test(q);
   const saysUT = /\b(utah|ut)\b(?!\s+(county|co\b))/.test(q);
   const state = saysWY && !saysUT ? "WY" : saysUT && !saysWY ? "UT" : null;
-  if (state) add(p => p.s === state, state === "UT" ? "Utah" : "Wyoming");
+  if (state) add(p => p.s === state, SN[state]);
   const ct = [], ctag = [];
   for (const [st, list] of Object.entries(COUNTIES)) for (const c of list) {
     const m = q.match(new RegExp("\\b" + c.toLowerCase() + "(\\s+county|\\s+co\\b)?\\b"));
