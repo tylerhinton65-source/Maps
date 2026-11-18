@@ -38,6 +38,8 @@
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
+const coords = document.getElementById("coords");
+
 // ---------- Speed settings shared by every layer ----------
 // updateWhenZooming:false -> don't fetch tiles for the in-between zoom levels, only where you land
 // keepBuffer:6            -> keep more already-loaded tiles around the edges so panning back is instant
@@ -89,9 +91,57 @@ const landOwnership = L.tileLayer(
   { ...fast, maxZoom: 19, opacity: 0.55, attribution: "BLM Surface Management Agency" }
 );
 
+// ---------- 2024 election results by precinct (NYT) ----------
+// Margin buckets, from big Trump win (deep red) to big Harris win (deep blue)
+function marginColor(m) {
+  if (m <= -0.6) return "#a50f15";
+  if (m <= -0.4) return "#de2d26";
+  if (m <= -0.2) return "#fb6a4a";
+  if (m <  0)    return "#fcbba1";
+  if (m <  0.2)  return "#c6dbef";
+  if (m <  0.4)  return "#6baed6";
+  if (m <  0.6)  return "#2171b5";
+  return "#08306b";
+}
+const fmt = n => n.toLocaleString();
+const precincts = L.geoJSON(null, {
+  style: f => ({ fillColor: marginColor(f.properties.m), fillOpacity: 0.6, color: "#555", weight: 0.3 }),
+  onEachFeature: (f, layer) => {
+    const p = f.properties;
+    const lead = p.m < 0 ? `Trump +${Math.abs(p.m * 100).toFixed(1)}` : `Harris +${(p.m * 100).toFixed(1)}`;
+    layer.bindPopup(`<b>Precinct ${p.id}</b><br>
+      <b>${lead}</b><br>
+      Trump: ${fmt(p.r)} (${(p.r / p.t * 100).toFixed(1)}%)<br>
+      Harris: ${fmt(p.d)} (${(p.d / p.t * 100).toFixed(1)}%)<br>
+      Total votes: ${fmt(p.t)}
+      ${p.o ? "" : "<br><i>Boundary is estimated</i>"}`);
+  },
+  attribution: 'Election data: <a href="https://github.com/nytimes/presidential-precinct-map-2024">The New York Times</a> (non-commercial use)'
+});
+let precinctsLoaded = false;
+function loadPrecincts() {
+  if (precinctsLoaded) return;
+  precinctsLoaded = true;
+  coords.textContent = "Loading precincts…";
+  fetch("data/precincts-2024.geojson")
+    .then(r => r.json())
+    .then(data => { precincts.addData(data); coords.textContent = "Precincts loaded — click one for results"; })
+    .catch(() => { precinctsLoaded = false; coords.textContent = "Couldn't load precincts"; });
+}
+
+const electionLegend = L.control({ position: "bottomright" });
+electionLegend.onAdd = () => {
+  const div = L.DomUtil.create("div", "legend");
+  const rows = [["#08306b","Harris +60 or more"],["#2171b5","Harris +40–60"],["#6baed6","Harris +20–40"],["#c6dbef","Harris +0–20"],
+                ["#fcbba1","Trump +0–20"],["#fb6a4a","Trump +20–40"],["#de2d26","Trump +40–60"],["#a50f15","Trump +60 or more"]];
+  div.innerHTML = "<b>2024 president</b><br>" + rows.map(([c,t]) => `<i style="background:${c}"></i>${t}`).join("<br>");
+  return div;
+};
+
 const overlays = {
   "State outlines": stateLayer,
-  "Land ownership (public land)": landOwnership
+  "Land ownership (public land)": landOwnership,
+  "2024 election by precinct": precincts
 };
 L.control.layers(baseMaps, overlays, { collapsed: false }).addTo(map);
 L.control.scale({ imperial: true, metric: false }).addTo(map);
@@ -109,11 +159,16 @@ legend.onAdd = () => {
     <i style="background:#fff;border:1px solid #ccc"></i>Blank = mostly private`;
   return div;
 };
-map.on("overlayadd", e => { if (e.layer === landOwnership) legend.addTo(map); });
-map.on("overlayremove", e => { if (e.layer === landOwnership) legend.remove(); });
+map.on("overlayadd", e => {
+  if (e.layer === landOwnership) legend.addTo(map);
+  if (e.layer === precincts) { loadPrecincts(); electionLegend.addTo(map); }
+});
+map.on("overlayremove", e => {
+  if (e.layer === landOwnership) legend.remove();
+  if (e.layer === precincts) electionLegend.remove();
+});
 
 // ---------- Coordinates readout ----------
-const coords = document.getElementById("coords");
 map.on("mousemove", e => {
   coords.textContent = `${e.latlng.lat.toFixed(5)}, ${e.latlng.lng.toFixed(5)}`;
 });
