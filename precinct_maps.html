@@ -78,14 +78,29 @@
   #basePanel, #racePanel { display: none; position: absolute; top: 16px; right: 80px; z-index: 1001; width: 210px; background: white; border-radius: 14px; box-shadow: var(--shadow); padding: 12px; flex-direction: column; gap: 6px; }
   #basePanel.open, #racePanel.open { display: flex; }
   #basePanel > *, #racePanel > * { flex: none; }
-  #racePanel { width: 240px; top: 66px; max-height: calc(100vh - 100px); overflow-y: auto; }
-  #racePanel h5 { margin: 0 0 4px; font-size: 11px; font-weight: 700; color: var(--red-dark); text-transform: uppercase; letter-spacing: .06em; }
-  .raceGroup { font-size: 10px; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: .08em; margin: 6px 2px 0; }
-  .raceOpt { height: auto !important; padding: 8px 12px !important; display: flex; flex-direction: column; align-items: flex-start; gap: 1px; }
-  .raceOpt small { font-size: 11px; font-weight: 500; color: #64748b; }
-  .raceOpt.on small { color: #991b1b; }
-  #raceOff { color: #64748b; }
-  .raceNote { margin: 4px 2px 0; font-size: 11px; line-height: 1.45; color: #64748b; }
+  #racePanel { width: 268px; top: 66px; max-height: calc(100vh - 100px); overflow-y: auto; padding: 14px; gap: 6px;
+    background: linear-gradient(180deg, #111c33 0%, var(--ink) 120px); border: 1px solid rgba(148,163,184,.14); color: #e2e8f0;
+    box-shadow: 0 18px 44px rgba(15,23,42,.45); scrollbar-color: #334155 transparent; }
+  #racePanel h5 { display: flex; align-items: center; gap: 8px; margin: 0 0 2px; font-size: 11px; font-weight: 800; color: #fca5a5; text-transform: uppercase; letter-spacing: .1em; }
+  #racePanel h5 .hIc { width: 22px; height: 22px; border-radius: 7px; display: grid; place-items: center; background: var(--red); color: white; box-shadow: 0 0 12px rgba(220,38,38,.5); }
+  .raceGroup { display: flex; align-items: center; gap: 8px; margin: 8px 2px 2px; font-size: 10px; font-weight: 800; letter-spacing: .12em; color: #fca5a5; }
+  .raceGroup::after { content: ""; flex: 1; height: 1px; background: linear-gradient(90deg, rgba(248,113,113,.4), transparent); }
+  .raceOpt { display: flex; align-items: center; gap: 11px; width: 100%; padding: 9px 12px 9px 9px; border: 1px solid rgba(148,163,184,.12); border-radius: 12px;
+    background: var(--ink-2); color: #f1f5f9; font-size: 14px; font-weight: 600; text-align: left; transition: background .15s, border-color .15s, transform .15s; }
+  .raceOpt:hover { background: var(--ink-3); border-color: rgba(148,163,184,.3); }
+  .raceOpt:active { transform: scale(.98); }
+  .raceOpt .rIc { width: 34px; height: 34px; flex: none; border-radius: 10px; display: grid; place-items: center; color: white;
+    background: linear-gradient(135deg, var(--g1), var(--g2)); box-shadow: 0 4px 12px -2px var(--g2), inset 0 1px 0 rgba(255,255,255,.25); }
+  .raceOpt .rTx { display: flex; flex-direction: column; gap: 1px; min-width: 0; flex: 1; }
+  .raceOpt small { font-size: 11px; font-weight: 500; color: #94a3b8; line-height: 1.35; }
+  .raceOpt.on { background: linear-gradient(135deg, rgba(220,38,38,.32), rgba(220,38,38,.1)); border-color: #ef4444; box-shadow: 0 0 0 3px rgba(239,68,68,.18), 0 6px 18px -6px rgba(220,38,38,.6); }
+  .raceOpt.on small { color: #fecaca; }
+  .raceOpt.on::after { content: ""; flex: none; width: 8px; height: 8px; border-radius: 50%; background: #f87171; box-shadow: 0 0 0 4px rgba(248,113,113,.22), 0 0 10px #f87171; }
+  #raceOff { display: flex; align-items: center; justify-content: center; gap: 8px; height: 40px; margin-top: 4px; border: 1px dashed rgba(148,163,184,.35); border-radius: 12px;
+    background: transparent; color: #94a3b8; font-size: 13px; font-weight: 600; }
+  #raceOff:hover { color: white; border-color: #f87171; background: rgba(220,38,38,.12); }
+  .raceNote { display: flex; gap: 8px; margin: 6px 2px 0; padding: 10px; border-radius: 10px; background: rgba(148,163,184,.08); font-size: 11px; line-height: 1.5; color: #94a3b8; }
+  .raceNote svg { flex: none; color: #fca5a5; margin-top: 1px; }
   #basePanel h5 { margin: 0 0 4px; font-size: 11px; font-weight: 700; color: var(--red-dark); text-transform: uppercase; letter-spacing: .06em; }
   /* ---------- Statewide totals ---------- */
   #totalsPanel { display: none; position: absolute; top: 16px; right: 80px; z-index: 1001; width: 360px; max-height: calc(100vh - 240px); overflow-y: auto; background: white; border-radius: 14px; box-shadow: var(--shadow); padding: 14px 16px 16px; }
@@ -169,6 +184,8 @@
       border-radius: 18px 18px 0 0; box-shadow: 0 -10px 40px rgba(15,23,42,.3); z-index: 1003;
     }
     #basePanel, #racePanel { padding: 16px 16px calc(16px + env(safe-area-inset-bottom)); gap: 8px; }
+    #racePanel { border: 0; border-top: 1px solid rgba(148,163,184,.2); }
+    .raceOpt { padding: 11px 14px 11px 11px; }
     #totalsPanel { padding: 16px 16px calc(16px + env(safe-area-inset-bottom)); }
     .baseOpt { height: 46px; font-size: 14px; }
     #filters { flex-direction: column; }
@@ -254,17 +271,17 @@
 </div>
 
 <div id="racePanel" role="dialog" aria-label="Election results">
-  <h5>Election results</h5>
+  <h5><span class="hIc"><svg aria-hidden="true" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round"><path d="M5 20V10M12 20V4M19 20v-7"/></svg></span>Election results</h5>
   <div class="raceGroup">2024</div>
-  <button class="baseOpt raceOpt" data-race="p2024">President<small>Utah + Wyoming</small></button>
+  <button class="raceOpt" data-race="p2024" style="--g1:#ef4444;--g2:#2563eb"><span class="rIc"><svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.5l2.6 5.3 5.9.9-4.3 4.1 1 5.8L12 16.8l-5.2 2.8 1-5.8-4.3-4.1 5.9-.9z"/></svg></span><span class="rTx">President<small>Utah + Wyoming</small></span></button>
   <div class="raceGroup">2026</div>
-  <button class="baseOpt raceOpt" data-race="gov">Governor<small>Wyoming · Utah had no race in 2026</small></button>
-  <button class="baseOpt raceOpt" data-race="house">U.S. House<small>Utah + Wyoming</small></button>
-  <button class="baseOpt raceOpt" data-race="sen">U.S. Senate<small>Wyoming · Utah had no race in 2026</small></button>
-  <button class="baseOpt raceOpt" data-race="sth">State House<small>Utah + Wyoming</small></button>
-  <button class="baseOpt raceOpt" data-race="ssen">State Senate<small>Utah + Wyoming · seats up this year</small></button>
-  <button class="baseOpt" id="raceOff">Hide results</button>
-  <p class="raceNote">Wyoming and Utah County are shown by precinct. The rest of Utah is shaded by county totals until those counties' precinct reports are added.</p>
+  <button class="raceOpt" data-race="gov" style="--g1:#fbbf24;--g2:#d97706"><span class="rIc"><svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M3 20h18M5 20v-8M19 20v-8M9.5 20v-5M14.5 20v-5M3.5 10.5 12 4l8.5 6.5z"/></svg></span><span class="rTx">Governor<small>Wyoming · Utah had no race in 2026</small></span></button>
+  <button class="raceOpt" data-race="house" style="--g1:#60a5fa;--g2:#1d4ed8"><span class="rIc"><svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h16M6 20v-6M10 20v-6M14 20v-6M18 20v-6M5 14h14M7.5 14a4.5 4.5 0 0 1 9 0M12 9.5V5.5M12 5.5h2.5"/></svg></span><span class="rTx">U.S. House<small>Utah + Wyoming</small></span></button>
+  <button class="raceOpt" data-race="sen" style="--g1:#a78bfa;--g2:#6d28d9"><span class="rIc"><svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M6 21V4M6 4h11l-2.2 4L17 12H6"/></svg></span><span class="rTx">U.S. Senate<small>Wyoming · Utah had no race in 2026</small></span></button>
+  <button class="raceOpt" data-race="sth" style="--g1:#34d399;--g2:#047857"><span class="rIc"><svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M4 11l8-6.5 8 6.5M6.5 9.5V20h11V9.5M10.5 20v-5h3v5"/></svg></span><span class="rTx">State House<small>Utah + Wyoming</small></span></button>
+  <button class="raceOpt" data-race="ssen" style="--g1:#f472b6;--g2:#be185d"><span class="rIc"><svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM3.5 20a5.5 5.5 0 0 1 11 0M16 5.2a3 3 0 0 1 0 5.6M20.5 20a5.5 5.5 0 0 0-3.5-5.1"/></svg></span><span class="rTx">State Senate<small>Utah + Wyoming · seats up this year</small></span></button>
+  <button type="button" id="raceOff"><svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3l18 18M10.6 6.1Q11.3 6 12 6c5 0 9 6 9 6a17 17 0 0 1-2.6 3.2M6.6 6.6C4.3 8.1 3 12 3 12s4 6 9 6a9 9 0 0 0 4-1M9.9 9.9a3 3 0 0 0 4.2 4.2"/></svg>Hide results</button>
+  <p class="raceNote"><svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 7.5v.5"/></svg><span>Wyoming and Utah County are shown by precinct. The rest of Utah is shaded by county totals until those counties' precinct reports are added.</span></p>
 </div>
 
 <div id="legends">
