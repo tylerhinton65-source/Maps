@@ -281,7 +281,8 @@ const baseMaps = {
   Satellite: L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}", { ...fast, maxZoom: 19, attribution: "Imagery &copy; Esri" }),
   Streets: L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", { ...fast, maxZoom: 19, attribution: "&copy; OpenStreetMap contributors" })
 };
-const map = L.map("map", { layers: [baseMaps.Topo], preferCanvas: true, zoomControl: false });
+const map = L.map("map", { layers: [baseMaps.Topo], preferCanvas: true, zoomControl: false,
+  zoomSnap: 0.25, zoomDelta: 0.5, wheelPxPerZoomLevel: 120 }); // finer zoom steps for pinch, scroll and +/- buttons
 L.control.scale({ imperial: true, metric: false, position: "bottomleft" }).addTo(map);
 L.control.zoom({ position: "bottomleft" }).addTo(map); // map key sits in the bottom-right corner
 
