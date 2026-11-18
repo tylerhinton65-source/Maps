@@ -48,6 +48,10 @@
   .btn-ghost:hover { background: #f1f5f9; color: var(--text); }
 
   #menuBtn { display: none; }
+  /* State outlines: same look as Statewide totals; icon greys out when outlines are off */
+  #rStates, #rStates.on { background: var(--ink-2); color: #f87171 !important; }
+  #rStates:hover { background: var(--ink-3); }
+  #rStates:not(.on) { color: #64748b !important; }
 
   /* ---------- Layer rail ---------- */
   #rail { position: absolute; top: 16px; right: 16px; z-index: 1001; display: flex; flex-direction: column; gap: 6px; padding: 6px; background: var(--ink); border-radius: 14px; box-shadow: var(--shadow); }
@@ -161,6 +165,8 @@
     .rb { width: 100%; height: 48px; display: flex; align-items: center; gap: 12px; padding: 0 12px; }
     .rb .tip, .rb:hover .tip { display: block; position: static; transform: none; padding: 0; background: none; color: #e2e8f0; font-size: 14px; font-weight: 600; }
     .rb.on .tip { color: white; }
+    #rStates .tip { color: #e2e8f0; }
+    #rStates:not(.on) .tip { color: #94a3b8; }
 
     /* Menus become bottom sheets */
     #basePanel, #racePanel, #totalsPanel {
@@ -216,14 +222,14 @@
 </div>
 
 <div id="rail">
-  <button class="rb on" id="rBase" style="--c:#dc2626;color:#fff" aria-label="Base map" aria-expanded="false"><svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="m12 3 9 5-9 5-9-5zM3 13l9 5 9-5"/></svg><span class="tip">Base map</span></button>
+  <button class="rb on" id="rBase" style="--c:#dc2626;color:#fff" aria-label="Map options" aria-expanded="false"><svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="m12 3 9 5-9 5-9-5zM3 13l9 5 9-5"/></svg><span class="tip">Map options</span></button>
   <button class="rb" id="rElection" style="--c:#dc2626;color:#f87171" aria-label="Election results" aria-expanded="false"><svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M5 20V10M12 20V4M19 20v-7"/></svg><span class="tip">Election results</span></button>
   <button class="rb" id="rTotals" style="--c:#dc2626;color:#f87171" aria-label="Statewide totals" aria-expanded="false"><svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 12V3h10v9M10.25 7.25l1.5 1.5 2.5-2.5M3 12h18v9H3zM9 16.5h6"/></svg><span class="tip">Statewide totals</span></button>
   <button class="rb on" id="rStates" style="--c:#475569;color:#cbd5e1" aria-label="State outlines" aria-pressed="true"><svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-dasharray="3 2.5"><rect x="4" y="4" width="16" height="16" rx="2"/></svg><span class="tip">State outlines</span></button>
 </div>
 
 <div id="basePanel">
-  <h5>Base map</h5>
+  <h5>Map options</h5>
   <button class="baseOpt on" data-base="Topo">Topo</button>
   <button class="baseOpt" data-base="Satellite">Satellite</button>
   <button class="baseOpt" data-base="Streets">Streets</button>
