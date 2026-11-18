@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Land Finder — Utah & Wyoming</title>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -21,7 +21,7 @@
     --shadow: 0 10px 30px rgba(15,23,42,.25);
   }
   * { box-sizing: border-box; }
-  html, body { margin: 0; height: 100%; font-family: Inter, system-ui, sans-serif; color: var(--text); }
+  html, body { margin: 0; height: 100%; overflow: hidden; overscroll-behavior: none; font-family: Inter, system-ui, sans-serif; color: var(--text); }
   #map { position: absolute; inset: 0; background: #e5e7eb; }
   button { font: inherit; cursor: pointer; }
 
@@ -31,7 +31,7 @@
   .brand { display: flex; align-items: center; gap: 10px; height: 56px; padding: 0 16px 0 10px; background: var(--ink); border-radius: 14px; box-shadow: var(--shadow); color: white; white-space: nowrap; }
   .brand .logo { width: 36px; height: 36px; border-radius: 10px; background: var(--red); display: grid; place-items: center; }
   .brand b { font-size: 15px; }
-  #searchCol { flex: 1; max-width: 720px; position: relative; }
+  #searchCol { flex: 1; min-width: 0; max-width: 720px; position: relative; }
   #ask { display: flex; align-items: center; gap: 8px; height: 56px; padding: 0 6px; background: var(--ink); border-radius: 14px; box-shadow: var(--shadow); }
   #filterBtn { display: flex; align-items: center; gap: 7px; height: 44px; padding: 0 12px; border: 0; border-radius: 10px; background: var(--ink-2); color: #e2e8f0; font-size: 14px; font-weight: 600; flex: none; }
   #filterBtn:hover, #filterBtn.open { background: var(--ink-3); color: white; }
@@ -52,7 +52,7 @@
   .btn-ghost:hover { background: #f1f5f9; color: var(--text); }
 
   /* ---------- Filters dropdown ---------- */
-  #filters { display: none; position: absolute; top: 64px; left: 0; width: 600px; max-width: calc(100vw - 32px); background: white; border-radius: 16px; box-shadow: 0 18px 44px rgba(15,23,42,.28); overflow: hidden; }
+  #filters { display: none; position: absolute; top: 64px; left: 0; width: 600px; max-width: calc(100vw - 32px); max-height: calc(100vh - 100px); overflow-y: auto; background: white; border-radius: 16px; box-shadow: 0 18px 44px rgba(15,23,42,.28); overflow: hidden; }
   #filters.open { display: flex; }
   #cats { width: 190px; flex: none; background: #f8fafc; border-right: 1px solid var(--line); padding: 8px; display: flex; flex-direction: column; gap: 2px; }
   .cat { display: flex; align-items: center; gap: 10px; height: 42px; padding: 0 10px; border: 0; border-radius: 10px; background: transparent; color: var(--text); font-size: 14px; text-align: left; }
@@ -82,9 +82,10 @@
   .rb:hover { background: var(--ink-3); }
   .rb.on { background: var(--c, var(--red)); color: white !important; }
   .rb .tip { display: none; position: absolute; right: 54px; top: 50%; transform: translateY(-50%); background: var(--ink); color: white; font-size: 12px; font-weight: 600; padding: 6px 10px; border-radius: 8px; white-space: nowrap; pointer-events: none; }
-  .rb:hover .tip { display: block; }
+  @media (hover: hover) { .rb:hover .tip { display: block; } }
   #basePanel, #racePanel { display: none; position: absolute; top: 16px; right: 80px; z-index: 1001; width: 210px; background: white; border-radius: 14px; box-shadow: var(--shadow); padding: 12px; flex-direction: column; gap: 6px; }
   #basePanel.open, #racePanel.open { display: flex; }
+  #basePanel > *, #racePanel > * { flex: none; }
   #racePanel { width: 240px; top: 66px; max-height: calc(100vh - 100px); overflow-y: auto; }
   #racePanel h5 { margin: 0 0 4px; font-size: 11px; font-weight: 700; color: var(--red-dark); text-transform: uppercase; letter-spacing: .06em; }
   .raceGroup { font-size: 10px; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: .08em; margin: 6px 2px 0; }
@@ -129,19 +130,54 @@
   .leaflet-control-zoom { border: 0 !important; box-shadow: var(--shadow) !important; border-radius: 12px !important; overflow: hidden; }
   .leaflet-control-zoom a { width: 40px !important; height: 40px !important; line-height: 40px !important; background: var(--ink) !important; color: white !important; border-color: var(--ink-3) !important; }
 
-  @media (max-width: 760px) {
-    #top { flex-wrap: wrap; right: 76px; }
+  /* ---------- Phones (portrait) and short landscape screens ---------- */
+  @media (max-width: 760px), (max-height: 500px) {
+    #top { top: calc(10px + env(safe-area-inset-top)); left: calc(10px + env(safe-area-inset-left)); right: calc(10px + env(safe-area-inset-right)); gap: 8px; z-index: 1002; }
+    .brand { height: 48px; padding: 0 6px; border-radius: 12px; }
     .brand b { display: none; }
-    .brand { padding: 0 10px; }
-    #searchCol { flex-basis: 100%; order: 2; }
-    #askInput::placeholder { color: transparent; }
+    #ask { height: 48px; padding: 0 4px; gap: 4px; border-radius: 12px; }
+    #filterBtn { height: 40px; padding: 0 10px; font-size: 0; gap: 4px; }
+    #filterCount { font-size: 12px; }
+    #ask .spark { display: none; }
+    #askInput { height: 40px; font-size: 16px; padding-left: 4px; } /* 16px stops iPhone from zooming in on tap */
+    #ask .btn-red { height: 40px; padding: 0 14px; }
+    #result { margin-right: 58px; }
+
+    #rail { top: calc(68px + env(safe-area-inset-top)); right: calc(10px + env(safe-area-inset-right)); padding: 4px; gap: 4px; border-radius: 12px; }
+    .rb { width: 42px; height: 42px; }
+
+    /* Menus become bottom sheets */
+    #filters, #basePanel, #racePanel {
+      position: fixed; top: auto !important; left: 0; right: 0; bottom: 0; width: auto; max-width: none;
+      max-height: calc(100vh - 70px); max-height: calc(100dvh - 70px); overflow-y: auto; overscroll-behavior: contain;
+      border-radius: 18px 18px 0 0; box-shadow: 0 -10px 40px rgba(15,23,42,.3); z-index: 1003;
+    }
+    #basePanel, #racePanel { padding: 16px 16px calc(16px + env(safe-area-inset-bottom)); gap: 8px; }
+    .baseOpt { height: 46px; font-size: 14px; }
     #filters { flex-direction: column; }
-    #cats { width: auto; flex-direction: row; overflow-x: auto; border-right: 0; border-bottom: 1px solid var(--line); }
+    #cats { width: auto; flex-direction: row; overflow-x: auto; border-right: 0; border-bottom: 1px solid var(--line); flex: none; scrollbar-width: none; }
+    #cats::-webkit-scrollbar { display: none; }
     .cat { flex: none; }
     .cat .soon { display: none; }
-    #pane { min-height: 0; }
+    #pane { min-height: 0; padding: 16px 16px 0; }
+    .paneFoot { position: sticky; bottom: 0; background: white; margin: 0 -16px; padding: 12px 16px calc(12px + env(safe-area-inset-bottom)); border-top: 1px solid var(--line); }
+    .seg { display: flex; }
+    .seg button { flex: 1; height: 38px; }
+    .row input, .row select, .field select { font-size: 16px; height: 42px; }
+    .row label { display: flex; align-items: center; gap: 6px; }
+
+    /* Bottom of the map: legends left (above the scale), pinch to zoom instead of +/- */
+    .leaflet-control-zoom { display: none; }
+    #legends { left: calc(10px + env(safe-area-inset-left)); right: auto; bottom: calc(58px + env(safe-area-inset-bottom)); align-items: flex-start; }
+    .leaflet-control-attribution { font-size: 9px; line-height: 1.35; }
+    .legend { width: 200px; }
+    .leaflet-bottom { margin-bottom: env(safe-area-inset-bottom); }
+    #card.phone { bottom: calc(16px + env(safe-area-inset-bottom)); }
     #status { display: none; }
-    #legends { bottom: 120px; }
+  }
+  /* Landscape phones: keep menus from stretching edge to edge */
+  @media (max-height: 500px) and (min-width: 761px) {
+    #filters, #basePanel, #racePanel { width: min(600px, 100%); margin: 0 auto; }
   }
 </style>
 </head>
@@ -283,6 +319,7 @@ document.querySelectorAll(".baseOpt").forEach(b => b.onclick = () => {
 $("rBase").onclick = () => {
   const open = $("basePanel").classList.toggle("open");
   $("rBase").setAttribute("aria-expanded", open);
+  if (open) openFilters(false);
 };
 
 // ---------- State outlines (official Census boundaries) ----------
@@ -430,7 +467,7 @@ setLayer = (id, on) => { _setLayer(id, on); if (id === "rElection") { syncAttrib
 // ---------- Race picker (opens from the election button) ----------
 function openRacePanel(open) {
   $("racePanel").classList.toggle("open", open); $("rElection").setAttribute("aria-expanded", open);
-  if (open) { $("basePanel").classList.remove("open"); $("rBase").setAttribute("aria-expanded", "false"); }
+  if (open) { $("basePanel").classList.remove("open"); $("rBase").setAttribute("aria-expanded", "false"); openFilters(false); }
 }
 $("rElection").onclick = () => openRacePanel(!$("racePanel").classList.contains("open"));
 $("rBase").addEventListener("click", () => openRacePanel(false));
@@ -492,6 +529,7 @@ segBind("fState", "state", fillCounties);
 segBind("fWinner", "winner");
 
 function openFilters(open) {
+  if (open) { $("basePanel").classList.remove("open"); $("rBase").setAttribute("aria-expanded", "false"); openRacePanel(false); }
   $("filters").classList.toggle("open", open);
   $("filterBtn").classList.toggle("open", open);
   $("filterBtn").setAttribute("aria-expanded", open);
@@ -630,6 +668,11 @@ $("clearBtn").onclick = () => { clearFilter(); $("fReset").click(); };
 
 // Close menus when clicking the map
 map.on("click", () => { openFilters(false); $("basePanel").classList.remove("open"); openRacePanel(false); });
+// Shorter search hint on small screens
+const phoneMQ = matchMedia("(max-width: 760px), (max-height: 500px)");
+const longHint = $("askInput").placeholder;
+const syncHint = () => { $("askInput").placeholder = phoneMQ.matches ? "Search a place or ask…" : longHint; };
+phoneMQ.addEventListener("change", syncHint); syncHint();
 map.on("mousemove", e => setStatus(`${e.latlng.lat.toFixed(4)}, ${e.latlng.lng.toFixed(4)}`));
 </script>
 </body>
