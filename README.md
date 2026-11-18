@@ -4,7 +4,7 @@ Map overlays for scouting land to buy in Utah and Wyoming.
 
 Two versions share the same data:
 - `index.html` — Land Finder (personal land scouting)
-- `politics.html` — Election Precinct Results (public, election-only version)
+- `precinct_maps.html` — Election Precinct Results (public, election-only version)
 
 Open either file in a browser to run it.
 
