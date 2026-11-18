@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <title>Land Finder — Utah & Wyoming</title>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -21,7 +21,7 @@
     --shadow: 0 10px 30px rgba(15,23,42,.25);
   }
   * { box-sizing: border-box; }
-  html, body { margin: 0; height: 100%; overflow: hidden; overscroll-behavior: none; font-family: Inter, system-ui, sans-serif; color: var(--text); }
+  html, body { margin: 0; height: 100%; overflow: hidden; overscroll-behavior: none; touch-action: pan-x pan-y; -webkit-text-size-adjust: 100%; font-family: Inter, system-ui, sans-serif; color: var(--text); }
   #map { position: absolute; inset: 0; background: #e5e7eb; }
   button { font: inherit; cursor: pointer; }
 
@@ -816,6 +816,8 @@ const longHint = $("askInput").placeholder;
 const syncHint = () => { $("askInput").placeholder = phoneMQ.matches ? "Search a place or ask…" : longHint; };
 phoneMQ.addEventListener("change", syncHint); syncHint();
 map.on("mousemove", e => setStatus(`${e.latlng.lat.toFixed(4)}, ${e.latlng.lng.toFixed(4)}`));
+// Pinch zooms the map only, never the whole page (iPhone Safari ignores user-scalable=no)
+["gesturestart", "gesturechange", "gestureend"].forEach(t => document.addEventListener(t, e => e.preventDefault(), { passive: false }));
 </script>
 </body>
 </html>
