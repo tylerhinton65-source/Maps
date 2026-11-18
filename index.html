@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Land Finder — Utah & Wyoming</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<style>
+  html, body { margin: 0; height: 100%; font-family: system-ui, sans-serif; }
+  #map { position: absolute; inset: 0; }
+  .title {
+    position: absolute; top: 10px; left: 50px; z-index: 1000;
+    background: rgba(255,255,255,.92); padding: 8px 12px; border-radius: 8px;
+    box-shadow: 0 1px 4px rgba(0,0,0,.3); font-weight: 600;
+  }
+  .title small { display: block; font-weight: 400; color: #555; }
+  .legend {
+    background: rgba(255,255,255,.92); padding: 8px 10px; border-radius: 8px;
+    box-shadow: 0 1px 4px rgba(0,0,0,.3); font-size: 12px; line-height: 18px;
+  }
+  .legend i { display: inline-block; width: 14px; height: 14px; margin-right: 6px; vertical-align: -2px; opacity: .8; }
+  #coords {
+    position: absolute; bottom: 24px; left: 10px; z-index: 1000;
+    background: rgba(255,255,255,.92); padding: 4px 8px; border-radius: 6px; font-size: 12px;
+  }
+</style>
+</head>
+<body>
+<div id="map"></div>
+<div class="title">Land Finder<small>Utah &amp; Wyoming</small></div>
+<div id="coords">Move the mouse over the map</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+// ---------- Base maps ----------
+const baseMaps = {
+  "Streets": L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+    maxZoom: 19, attribution: "&copy; OpenStreetMap contributors"
+  }),
+  "Satellite": L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}", {
+    maxZoom: 19, attribution: "Imagery &copy; Esri"
+  }),
+  "Topo": L.tileLayer("https://basemap.nationalmap.gov/arcgis/rest/services/USGSTopo/MapServer/tile/{z}/{y}/{x}", {
+    maxZoom: 16, attribution: "USGS The National Map"
+  })
+};
+
+const map = L.map("map", { layers: [baseMaps["Topo"]] });
+
+// ---------- State outlines (simplified boundaries) ----------
+const states = {
+  type: "FeatureCollection",
+  features: [
+    { type: "Feature", properties: { name: "Utah" }, geometry: { type: "Polygon", coordinates: [[
+      [-114.052, 37.000], [-109.045, 37.000], [-109.050, 41.000], [-111.047, 41.000],
+      [-111.047, 42.000], [-114.040, 42.000], [-114.052, 37.000]
+    ]]}},
+    { type: "Feature", properties: { name: "Wyoming" }, geometry: { type: "Polygon", coordinates: [[
+      [-111.056, 41.000], [-104.053, 41.000], [-104.053, 45.000], [-111.056, 45.000], [-111.056, 41.000]
+    ]]}}
+  ]
+};
+const stateLayer = L.geoJSON(states, {
+  style: { color: "#d62828", weight: 3, fill: false, dashArray: "6 4" },
+  onEachFeature: (f, layer) => layer.bindTooltip(f.properties.name, { sticky: true })
+}).addTo(map);
+map.fitBounds(stateLayer.getBounds(), { padding: [20, 20] });
+
+// ---------- Overlays ----------
+const landOwnership = L.tileLayer(
+  "https://gis.blm.gov/arcgis/rest/services/lands/BLM_Natl_SMA_Cached_without_PriUnk/MapServer/tile/{z}/{y}/{x}",
+  { maxZoom: 19, opacity: 0.55, attribution: "BLM Surface Management Agency" }
+);
+
+const overlays = {
+  "State outlines": stateLayer,
+  "Land ownership (public land)": landOwnership
+};
+L.control.layers(baseMaps, overlays, { collapsed: false }).addTo(map);
+L.control.scale({ imperial: true, metric: false }).addTo(map);
+
+// ---------- Legend for land ownership ----------
+const legend = L.control({ position: "bottomright" });
+legend.onAdd = () => {
+  const div = L.DomUtil.create("div", "legend");
+  div.innerHTML = `<b>Land ownership</b><br>
+    <i style="background:#fee67a"></i>BLM<br>
+    <i style="background:#cde3a6"></i>Forest Service<br>
+    <i style="background:#cab3d6"></i>National Park<br>
+    <i style="background:#9dc8e4"></i>State<br>
+    <i style="background:#fbb4c9"></i>Tribal (BIA)<br>
+    <i style="background:#fff;border:1px solid #ccc"></i>Blank = mostly private`;
+  return div;
+};
+map.on("overlayadd", e => { if (e.layer === landOwnership) legend.addTo(map); });
+map.on("overlayremove", e => { if (e.layer === landOwnership) legend.remove(); });
+
+// ---------- Coordinates readout ----------
+const coords = document.getElementById("coords");
+map.on("mousemove", e => {
+  coords.textContent = `${e.latlng.lat.toFixed(5)}, ${e.latlng.lng.toFixed(5)}`;
+});
+</script>
+</body>
+</html>
