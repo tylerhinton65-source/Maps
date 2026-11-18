@@ -47,12 +47,6 @@
   .btn-ghost { height: 36px; padding: 0 10px; border: 0; border-radius: 8px; background: transparent; color: var(--muted); font-size: 13px; }
   .btn-ghost:hover { background: #f1f5f9; color: var(--text); }
 
-  #menuBtn { display: none; }
-  /* State outlines: same look as Statewide totals; icon greys out when outlines are off */
-  #rStates, #rStates.on { background: var(--ink-2); color: #f87171 !important; }
-  #rStates:hover { background: var(--ink-3); }
-  #rStates:not(.on) { color: #64748b !important; }
-
   /* ---------- Layer rail ---------- */
   #rail { position: absolute; top: 16px; right: 16px; z-index: 1001; display: flex; flex-direction: column; gap: 6px; padding: 6px; background: var(--ink); border-radius: 14px; box-shadow: var(--shadow); }
   .rb { width: 44px; height: 44px; border: 0; border-radius: 10px; background: var(--ink-2); display: grid; place-items: center; position: relative; }
@@ -147,26 +141,17 @@
   @media (max-width: 760px), (max-height: 500px) {
     #top { display: flex; top: calc(10px + env(safe-area-inset-top)); left: calc(10px + env(safe-area-inset-left)); right: calc(10px + env(safe-area-inset-right)); gap: 8px; z-index: 1002; }
     .brand { height: 48px; padding: 0 6px; border-radius: 12px; }
-    .brand { display: none; }
+    .brand b { display: none; }
     #ask { height: 48px; padding: 0 4px; gap: 4px; border-radius: 12px; }
     #ask .spark { display: none; }
     #askInput { height: 40px; font-size: 16px; padding-left: 4px; } /* 16px stops iPhone from zooming in on tap */
     #searchCol { flex: 1; }
     #ask { padding-left: 8px; }
     #ask .btn-red { height: 40px; padding: 0 14px; }
+    #result { margin-right: 58px; }
 
-    /* Hamburger menu replaces the button column */
-    #menuBtn { display: grid; place-items: center; flex: none; width: 48px; height: 48px; border: 0; border-radius: 12px; background: var(--ink); color: white; box-shadow: var(--shadow); }
-    #menuBtn .mClose, #menuBtn.open .mOpen { display: none; }
-    #menuBtn.open .mClose { display: inline; }
-    #menuBtn.open { background: var(--ink-2); }
-    #rail { display: none; top: calc(66px + env(safe-area-inset-top)); right: calc(10px + env(safe-area-inset-right)); width: 230px; padding: 6px; gap: 4px; border-radius: 14px; z-index: 1002; }
-    #rail.open { display: flex; }
-    .rb { width: 100%; height: 48px; display: flex; align-items: center; gap: 12px; padding: 0 12px; }
-    .rb .tip, .rb:hover .tip { display: block; position: static; transform: none; padding: 0; background: none; color: #e2e8f0; font-size: 14px; font-weight: 600; }
-    .rb.on .tip { color: white; }
-    #rStates .tip { color: #e2e8f0; }
-    #rStates:not(.on) .tip { color: #94a3b8; }
+    #rail { top: calc(68px + env(safe-area-inset-top)); right: calc(10px + env(safe-area-inset-right)); padding: 4px; gap: 4px; border-radius: 12px; }
+    .rb { width: 42px; height: 42px; }
 
     /* Menus become bottom sheets */
     #basePanel, #racePanel, #totalsPanel {
@@ -208,7 +193,7 @@
     <form id="ask" autocomplete="off">
       <svg class="spark" aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l1.9 5.6L19.5 9.5l-5.6 1.9L12 17l-1.9-5.6L4.5 9.5l5.6-1.9z"/></svg>
       <label for="askInput" style="position:absolute;left:-9999px">Search or ask</label>
-      <input id="askInput" placeholder="Ask: “2026 Mike Kennedy race”, “Trump over 80% in Wyoming”, “go to Moab” or a precinct code">
+      <input id="askInput" placeholder="Ask: “Trump over 80% in Wyoming”, “go to Moab” or a precinct code">
       <button type="submit" class="btn-red">Search</button>
     </form>
 
@@ -217,19 +202,17 @@
       <button class="btn-ghost" id="clearBtn" type="button">Clear</button>
     </div>
   </div>
-
-  <button type="button" id="menuBtn" aria-label="Menu" aria-expanded="false" aria-controls="rail"><svg aria-hidden="true" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path class="mOpen" d="M4 7h16M4 12h16M4 17h16"/><path class="mClose" d="M6 6l12 12M18 6 6 18"/></svg></button>
 </div>
 
 <div id="rail">
-  <button class="rb on" id="rBase" style="--c:#dc2626;color:#fff" aria-label="Map options" aria-expanded="false"><svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="m12 3 9 5-9 5-9-5zM3 13l9 5 9-5"/></svg><span class="tip">Map options</span></button>
+  <button class="rb on" id="rBase" style="--c:#dc2626;color:#fff" aria-label="Base map" aria-expanded="false"><svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="m12 3 9 5-9 5-9-5zM3 13l9 5 9-5"/></svg><span class="tip">Base map</span></button>
   <button class="rb" id="rElection" style="--c:#dc2626;color:#f87171" aria-label="Election results" aria-expanded="false"><svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M5 20V10M12 20V4M19 20v-7"/></svg><span class="tip">Election results</span></button>
   <button class="rb" id="rTotals" style="--c:#dc2626;color:#f87171" aria-label="Statewide totals" aria-expanded="false"><svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 12V3h10v9M10.25 7.25l1.5 1.5 2.5-2.5M3 12h18v9H3zM9 16.5h6"/></svg><span class="tip">Statewide totals</span></button>
   <button class="rb on" id="rStates" style="--c:#475569;color:#cbd5e1" aria-label="State outlines" aria-pressed="true"><svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-dasharray="3 2.5"><rect x="4" y="4" width="16" height="16" rx="2"/></svg><span class="tip">State outlines</span></button>
 </div>
 
 <div id="basePanel">
-  <h5>Map options</h5>
+  <h5>Base map</h5>
   <button class="baseOpt on" data-base="Topo">Topo</button>
   <button class="baseOpt" data-base="Satellite">Satellite</button>
   <button class="baseOpt" data-base="Streets">Streets</button>
@@ -241,7 +224,7 @@
   <button class="raceOpt" data-race="p2024"><span class="rIc"><svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.5l2.6 5.3 5.9.9-4.3 4.1 1 5.8L12 16.8l-5.2 2.8 1-5.8-4.3-4.1 5.9-.9z"/></svg></span><span class="rTx">President<small>Utah + Wyoming</small></span></button>
   <div class="raceGroup">2026</div>
   <button class="raceOpt" data-race="gov"><span class="rIc"><svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 20h18M5 20v-8M19 20v-8M9.5 20v-5M14.5 20v-5M3.5 10.5 12 4l8.5 6.5z"/></svg></span><span class="rTx">Governor<small>Wyoming · Utah had no race in 2026</small></span></button>
-  <button class="raceOpt" data-race="house"><span class="rIc"><svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h16M6 20v-6M10 20v-6M14 20v-6M18 20v-6M5 14h14M7.5 14a4.5 4.5 0 0 1 9 0M12 9.5V5.5M12 5.5h2.5"/></svg></span><span class="rTx">U.S. House<small>Utah + Wyoming</small></span></button>
+  <button class="raceOpt" data-race="house"><span class="rIc"><svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h16M6 20v-6M10 20v-6M14 20v-6M18 20v-6M5 14h14M7.5 14a4.5 4.5 0 0 1 9 0M12 9.5V5.5M12 5.5h2.5"/></svg></span><span class="rTx">U.S. House<small>Utah, Wyoming + South Dakota</small></span></button>
   <button class="raceOpt" data-race="sen"><span class="rIc"><svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 21V4M6 4h11l-2.2 4L17 12H6"/></svg></span><span class="rTx">U.S. Senate<small>Wyoming · Utah had no race in 2026</small></span></button>
   <button class="raceOpt" data-race="sth"><span class="rIc"><svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 11l8-6.5 8 6.5M6.5 9.5V20h11V9.5M10.5 20v-5h3v5"/></svg></span><span class="rTx">State House<small>Utah + Wyoming</small></span></button>
   <button class="raceOpt" data-race="ssen"><span class="rIc"><svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM3.5 20a5.5 5.5 0 0 1 11 0M16 5.2a3 3 0 0 1 0 5.6M20.5 20a5.5 5.5 0 0 0-3.5-5.1"/></svg></span><span class="rTx">State Senate<small>Utah + Wyoming · seats up this year</small></span></button>
@@ -310,9 +293,10 @@ map.fitBounds(stateLayer.getBounds(), { padding: [40, 40] });
 // plus data/results-2026-statewide.json: WY + Utah County legislature by precinct, Utah county totals, statewide totals.
 const F26 = "data/precincts-2026.geojson";
 const SW = "data/results-2026-statewide.json";
-const COUNTY_URL = "https://tigerweb.geo.census.gov/arcgis/rest/services/TIGERweb/State_County/MapServer/1/query?where=STATE%3D%2749%27&outFields=NAME&maxAllowableOffset=0.002&geometryPrecision=5&outSR=4326&f=geojson";
+const COUNTY_URL = "https://tigerweb.geo.census.gov/arcgis/rest/services/TIGERweb/State_County/MapServer/1/query?where=STATE%20IN%20(%2749%27%2C%2746%27)&outFields=NAME%2CSTATE&maxAllowableOffset=0.002&geometryPrecision=5&outSR=4326&f=geojson";
 const NYT = 'Election data: <a href="https://github.com/nytimes/presidential-precinct-map-2024">The New York Times</a> (non-commercial use)';
-const SRC26 = 'Results: <a href="https://sos.wyo.gov/Elections/Docs/2026/2026GeneralResults.aspx">Wyoming SOS</a>, <a href="https://electionresults.utah.gov/results/public/Utah/elections/General11032026">Utah Lt. Governor</a>, <a href="https://vote.utahcounty.gov/results">Utah County Elections</a>; boundaries: NYT (WY), <a href="https://gis.utah.gov/data/political/voter-precincts">UGRC</a> (UT precincts), Census (UT counties)';
+const SRC26 = 'Results: <a href="https://sos.wyo.gov/Elections/Docs/2026/2026GeneralResults.aspx">Wyoming SOS</a>, <a href="https://electionresults.utah.gov/results/public/Utah/elections/General11032026">Utah Lt. Governor</a>, <a href="https://vote.utahcounty.gov/results">Utah County Elections</a>; boundaries: NYT (WY), <a href="https://gis.utah.gov/data/political/voter-precincts">UGRC</a> (UT precincts), Census (UT + SD counties)'+', <a href="https://electionresults.sd.gov/">South Dakota SOS</a> (unofficial, by county)';
+const SN = { UT: "Utah", WY: "Wyoming", SD: "South Dakota" };
 const RACES = {
   p2024: { file: "data/precincts-2024.geojson", title: "2024 president", r: "Trump", d: "Harris", attr: NYT },
   gov:   { file: F26, title: "2026 Governor", r: "Barlow", d: "Casner", attr: SRC26, none: { UT: "Utah had no governor's race in 2026." } },
@@ -321,7 +305,7 @@ const RACES = {
   sth:   { file: F26, title: "2026 State House", r: "Republican", d: "Democrat", attr: SRC26 },
   ssen:  { file: F26, title: "2026 State Senate", r: "Republican", d: "Democrat", attr: SRC26 }
 };
-let race = "house"; // opens on the 2026 U.S. House races
+let race = "p2024";
 const RAMP = ["#a50f15","#de2d26","#fb6a4a","#fcbba1","#c6dbef","#6baed6","#2171b5","#08306b"];
 const RAMP_M = ["#7f2704","#d94801","#fd8d3c","#fdd0a2","#c7e9c0","#74c476","#238b45","#00441b"]; // ballot measures: against ↔ for
 const TIE = "#facc15"; // tied precincts
@@ -383,10 +367,11 @@ function buildRace(k, raw, sw, cgeo) {
   const have = new Set(feats.filter(f => f.properties.s === "UT").map(f => f.properties.c));
   let nc = 0;
   for (const g of (cgeo ? cgeo.features : [])) {
-    const c = g.properties.NAME.replace(/ County$/, ""), d = (sw.UT.counties[c] || {})[k];
-    if (!d || !d.t || have.has(c)) continue;
+    const st = g.properties.STATE === "46" ? "SD" : "UT";
+    const c = g.properties.NAME.replace(/ County$/, ""), d = ((sw[st] || {}).counties || {})[c]?.[k];
+    if (!d || !d.t || (st === "UT" && have.has(c))) continue;
     const one = d.parts.length === 1 ? d.parts[0] : null;
-    feats.push({ type: "Feature", geometry: g.geometry, properties: { id: "UT-" + c, s: "UT", c, n: c + " County", county: 1,
+    feats.push({ type: "Feature", geometry: g.geometry, properties: { id: st + "-" + c, s: st, c, n: c + " County", county: 1,
       r: d.r, d: d.d, t: d.t, m: d.m, rn: one && one.rn, dn: one && one.dn, dist: d.parts.map(x => x.dist).join(", "), parts: d.parts, o: 1 } });
     nc++;
   }
@@ -405,7 +390,7 @@ function loadPrecincts() {
     const d = { type: "FeatureCollection", features: feats };
     precinctData = d; precincts.clearLayers(); precincts.addData(d);
     const np = feats.length - nc;
-    setStatus(`${fmt(np)} precincts${nc ? ` + ${nc} Utah counties` : ""} · ${RACES[k].title}` + (k !== "p2024" && !cgeo ? " · Utah county outlines unavailable" : ""));
+    setStatus(`${fmt(np)} precincts${nc ? ` + ${nc} counties` : ""} · ${RACES[k].title}` + (k !== "p2024" && !cgeo ? " · county outlines unavailable" : ""));
     syncAttribution(); renderTotals(); return d;
   }).catch(e => { loading = null; setStatus("Couldn't load precincts"); throw e; });
   return loading;
@@ -430,7 +415,7 @@ function showCard(p, sticky) {
   const pr = pct(p.r, p.t), pd = pct(p.d, p.t), po = pct(oth, p.t);
   const R = RACES[race], ms = R.measure;
   $("cWhere").textContent = p.county ? `Utah · ${R.title} · county total`
-    : `${p.c} County, ${p.s === "UT" ? "Utah" : "Wyoming"} · ${R.title.replace(/ · .*/, "")}${p.dist ? " · " + p.dist : ""}`;
+    : `${p.c} County, ${SN[p.s]} · ${R.title.replace(/ · .*/, "")}${p.dist ? " · " + p.dist : ""}`;
   $("cName").textContent = p.county ? `${p.c} County` : `Precinct ${p.n}`;
   const rep = p.m < 0;
   $("cLead").textContent = isTie(p) ? "Tied" : `${rep ? (ms ? "Against" : short(rName(p))) : (ms ? "For" : short(dName(p)))} +${Math.abs(p.m * 100).toFixed(1)}`;
@@ -518,7 +503,7 @@ function voteRows(r, d, t, rn, dn) {
     + row("var(--rep)", rn, r) + row("var(--dem)", dn, d) + row("var(--other)", "Other", o);
 }
 function stateTotals(st, list, k) {
-  const name = st === "UT" ? "Utah" : "Wyoming";
+  const name = SN[st];
   if (!list || !list.length) return `<div class="tState"><h6>${name}</h6><p class="tNone">${esc((RACES[k].none || {})[st] || "No results.")}</p></div>`;
   let r = 0, d = 0, t = 0; list.forEach(x => { r += x.r; d += x.d; t += x.t; });
   if (list.length === 1) {
@@ -545,12 +530,12 @@ async function renderTotals() {
   if (k === "p2024") {
     const raw = await getRaw(R.file), sum = { UT: [0, 0, 0], WY: [0, 0, 0] };
     raw.features.forEach(f => { const p = f.properties, s = sum[p.s]; if (s) { s[0] += p.r; s[1] += p.d; s[2] += p.t; } });
-    html += ["UT", "WY"].map(st => `<div class="tState"><h6>${st === "UT" ? "Utah" : "Wyoming"}<small>${fmt(sum[st][2])} votes</small></h6>${voteRows(sum[st][0], sum[st][1], sum[st][2], R.r, R.d)}</div>`).join("");
+    html += ["UT", "WY"].map(st => `<div class="tState"><h6>${SN[st]}<small>${fmt(sum[st][2])} votes</small></h6>${voteRows(sum[st][0], sum[st][1], sum[st][2], R.r, R.d)}</div>`).join("");
     html += `<p class="tNote">Sum of the precinct results on the map (The New York Times).</p>`;
   } else {
     const sw = await getRaw(SW);
-    html += stateTotals("UT", sw.UT.totals[k], k) + stateTotals("WY", sw.WY.totals[k], k);
-    html += `<p class="tNote">Wyoming: official state canvass. Utah: counties have canvassed; the statewide canvass hasn't certified yet. Margins are winner over runner-up.${k === "ssen" ? " Only about half of each state's senate seats were on the ballot." : ""}</p>`;
+    html += stateTotals("UT", sw.UT.totals[k], k) + stateTotals("WY", sw.WY.totals[k], k) + (sw.SD && sw.SD.totals[k] ? stateTotals("SD", sw.SD.totals[k], k) : "");
+    html += `<p class="tNote">Wyoming: official state canvass. Utah: counties have canvassed; the statewide canvass hasn't certified yet.${sw.SD && sw.SD.totals[k] ? " South Dakota: unofficial Secretary of State results, shown by county (the state doesn't publish precinct results)." : ""} Margins are winner over runner-up.${k === "ssen" ? " Only about half of each state's senate seats were on the ballot." : ""}</p>`;
   }
   if (race === k) body.innerHTML = html;
 }
@@ -570,62 +555,6 @@ const COUNTIES = {
   WY: "Albany,Big Horn,Campbell,Carbon,Converse,Crook,Fremont,Goshen,Hot Springs,Johnson,Laramie,Lincoln,Natrona,Niobrara,Park,Platte,Sheridan,Sublette,Sweetwater,Teton,Uinta,Washakie,Weston".split(",")
 };
 
-// ---------- Search box: switching races ("show me the 2026 Mike Kennedy race") ----------
-const norm = t => " " + t.toLowerCase().replace(/[“”"'.,]/g, "").replace(/\s+/g, " ") + " ";
-let candIndex = null;
-async function candidates() {
-  if (candIndex) return candIndex;
-  const sw = await getRaw(SW), list = [];
-  for (const k of ["house", "sen", "gov", "sth", "ssen"]) for (const st of ["UT", "WY"]) for (const x of (sw[st].totals[k] || []))
-    for (const [n, side] of [[x.rn, "R"], [x.dn, "D"], [x.o && x.o.n, "O"]])
-      if (n && !/write-in/i.test(n)) list.push({ name: n, key: norm(n).trim(), last: norm(n).trim().split(" ").pop(), k, st, dist: x.dist, side, rn: x.rn, dn: x.dn });
-  return candIndex = list;
-}
-// Figures out which race a search is about. Returns null if it doesn't mention one.
-async function raceIntent(raw) {
-  let q = norm(raw), k = null, cand = null, dist = null;
-  const take = re => { const m = q.match(re); if (m) q = q.replace(re, " "); return m; };
-  // A candidate by full name, or by a last name only one 2026 candidate has
-  try {
-    const list = await candidates();
-    cand = list.find(c => q.includes(" " + c.key + " "));
-    if (!cand) { const ms = list.filter(c => c.last.length > 3 && q.includes(" " + c.last + " ")); if (ms.length && ms.every(c => c.k === ms[0].k && c.dist === ms[0].dist)) cand = ms[0]; }
-    if (cand) { q = q.replace(" " + cand.key + " ", " ").replace(" " + cand.last + " ", " "); k = cand.k; }
-  } catch {}
-  if (!k) {
-    if (take(/ state senate | (?:sd|senate district) ?(\d+) /)) k = "ssen";
-    else if (take(/ state house | (?:hd|house district) ?(\d+) | legislature | legislative /)) k = "sth";
-    else if (take(/ governors? | gubernatorial /)) k = "gov";
-    else if (take(/ (?:us |u s )?senate | senators? /)) k = "sen";
-    else if (take(/ (?:us |u s )?house | congress(?:ional)? | congressman | congresswoman /)) k = "house";
-    else if (take(/ president(?:ial)? /) || / (trump|harris) /.test(q)) k = "p2024";
-    else if (/ 2024 /.test(q)) k = "p2024";
-    else if (/ 2026 /.test(q)) k = "house";
-  }
-  if (!k) return null;
-  const d = norm(raw).match(/ (?:hd|house district) ?(\d+) /), sd = norm(raw).match(/ (?:sd|senate district) ?(\d+) /), cd = norm(raw).match(/ (ut|utah|wy)[- ]?(\d|al) /);
-  if (!cand && k === "sth" && d) dist = "HD " + d[1];
-  if (!cand && k === "ssen" && sd) dist = "SD " + sd[1];
-  if (!cand && k === "house" && cd) dist = (cd[1] === "wy" ? "WY-" : "UT-") + cd[2].toUpperCase();
-  const STOP = / (?:show|me|the|a|an|race|races|results?|map|of|for|in|on|view|see|look|at|switch|to|please|2024|2026|election|elections|whats|what|is) /;
-  while (STOP.test(q)) q = q.replace(STOP, " ");
-  return { k, cand, dist, rest: q.trim() };
-}
-async function runRaceSearch(ri, raw) {
-  filterFn = null; lastQuery = null;
-  if (ri.k !== race || !map.hasLayer(precincts)) await setRace(ri.k);
-  await loadPrecincts();
-  const tests = [], tags = [RACES[ri.k].title];
-  const inDist = dd => p => dd === "Statewide" ? p.s === ri.cand.st : (p.dist || "").split(/,\s*/).includes(dd);
-  if (ri.cand) { tests.push(inDist(ri.cand.dist)); tags.push(`${ri.cand.name}${ri.cand.dist === "Statewide" ? "" : " · " + ri.cand.dist}`); }
-  else if (ri.dist) { tests.push(p => (p.dist || "").split(/,\s*/).includes(ri.dist)); tags.push(ri.dist); }
-  if (ri.rest) { const pq = parseQuery(ri.rest); if (pq.tests) { tests.push(...pq.tests); tags.push(...pq.tags); } }
-  const lbl = ri.cand && ri.cand.rn && ri.cand.dn ? { r: short(ri.cand.rn), d: short(ri.cand.dn) } : null;
-  if (tests.length) return applyTests(tests, tags, `“${raw}”`, lbl);
-  precincts.setStyle(precinctStyle);
-  showResult(`Showing <b>${RACES[ri.k].title}</b>`, []);
-}
-
 // ---------- Search box (plain-English) ----------
 const num = s => parseFloat(String(s).replace(/,/g, ""));
 function parseQuery(raw) {
@@ -637,7 +566,7 @@ function parseQuery(raw) {
   const saysWY = /\b(wyoming|wy)\b/.test(q);
   const saysUT = /\b(utah|ut)\b(?!\s+(county|co\b))/.test(q);
   const state = saysWY && !saysUT ? "WY" : saysUT && !saysWY ? "UT" : null;
-  if (state) add(p => p.s === state, state === "UT" ? "Utah" : "Wyoming");
+  if (state) add(p => p.s === state, SN[state]);
   const ct = [], ctag = [];
   for (const [st, list] of Object.entries(COUNTIES)) for (const c of list) {
     const m = q.match(new RegExp("\\b" + c.toLowerCase() + "(\\s+county|\\s+co\\b)?\\b"));
@@ -668,10 +597,9 @@ function parseQuery(raw) {
   return { tests, tags };
 }
 
-async function applyTests(tests, tags, label, lbl) {
+async function applyTests(tests, tags, label) {
   if (!tests.length) { clearFilter(); return; }
-  lastQuery = [tests, tags, label, lbl];
-  const N = lbl || LBL;
+  lastQuery = [tests, tags, label];
   if (!map.hasLayer(precincts)) setLayer("rElection", true);
   await loadPrecincts();
   filterFn = p => tests.every(t => t(p));
@@ -680,7 +608,7 @@ async function applyTests(tests, tags, label, lbl) {
   if (!hits.length) return showResult(`No precincts match ${label}.`, tags);
   let r = 0, d = 0, t = 0;
   hits.forEach(f => { r += f.properties.r; d += f.properties.d; t += f.properties.t; });
-  showResult(`<b>${fmt(hits.length)}</b> precincts · ${fmt(t)} votes · ${N.r} ${pct(r, t).toFixed(1)}% · ${N.d} ${pct(d, t).toFixed(1)}%`, tags);
+  showResult(`<b>${fmt(hits.length)}</b> precincts · ${fmt(t)} votes · ${LBL.r} ${pct(r, t).toFixed(1)}% · ${LBL.d} ${pct(d, t).toFixed(1)}%`, tags);
   map.fitBounds(L.geoJSON({ type: "FeatureCollection", features: hits }).getBounds(), { padding: [60, 60], maxZoom: 12 });
 }
 
@@ -717,28 +645,22 @@ function clearFilter() {
   filterFn = null; lastQuery = null; precincts.setStyle(precinctStyle);
   $("result").classList.remove("show"); $("askInput").value = "";
 }
-$("ask").onsubmit = async e => {
+$("ask").onsubmit = e => {
   e.preventDefault();
   const raw = $("askInput").value; if (!raw.trim()) return;
   const code = raw.trim().match(/^(?:precinct\s+)?([a-z]{0,3}\d[\w-]*)$/i);
-  const ri = await raceIntent(raw);
-  if (ri) return runRaceSearch(ri, raw);
   if (code) return findPrecinct(code[1]);
   const parsed = parseQuery(raw);
   parsed.place ? goToPlace(parsed.place) : applyTests(parsed.tests, parsed.tags, `“${raw}”`);
 };
 $("clearBtn").onclick = () => clearFilter();
 
-// Phone hamburger menu
-function openMenu(open) { $("rail").classList.toggle("open", open); $("menuBtn").classList.toggle("open", open); $("menuBtn").setAttribute("aria-expanded", open); }
-$("menuBtn").onclick = () => openMenu(!$("rail").classList.contains("open"));
-document.querySelectorAll("#rail .rb").forEach(b => b.addEventListener("click", () => openMenu(false)));
 // Close menus when clicking the map
-map.on("click", () => { openMenu(false); $("basePanel").classList.remove("open"); openRacePanel(false); if (phoneMQ.matches) openTotals(false); });
+map.on("click", () => { $("basePanel").classList.remove("open"); openRacePanel(false); if (phoneMQ.matches) openTotals(false); });
 // Shorter search hint on small screens
 const phoneMQ = matchMedia("(max-width: 760px), (max-height: 500px)");
 const longHint = $("askInput").placeholder;
-const syncHint = () => { $("askInput").placeholder = phoneMQ.matches ? "Search a race or place…" : longHint; };
+const syncHint = () => { $("askInput").placeholder = phoneMQ.matches ? "Search a place or ask…" : longHint; };
 phoneMQ.addEventListener("change", syncHint); syncHint();
 setLayer("rElection", true); // show results when the page opens
 map.on("mousemove", e => setStatus(`${e.latlng.lat.toFixed(4)}, ${e.latlng.lng.toFixed(4)}`));
