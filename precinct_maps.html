@@ -141,7 +141,7 @@
   @media (max-width: 760px), (max-height: 500px) {
     #top { display: flex; top: calc(10px + env(safe-area-inset-top)); left: calc(10px + env(safe-area-inset-left)); right: calc(10px + env(safe-area-inset-right)); gap: 8px; z-index: 1002; }
     .brand { height: 48px; padding: 0 6px; border-radius: 12px; }
-    .brand b { display: none; }
+    .brand { display: none; }
     #ask { height: 48px; padding: 0 4px; gap: 4px; border-radius: 12px; }
     #ask .spark { display: none; }
     #askInput { height: 40px; font-size: 16px; padding-left: 4px; } /* 16px stops iPhone from zooming in on tap */
@@ -193,7 +193,7 @@
     <form id="ask" autocomplete="off">
       <svg class="spark" aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l1.9 5.6L19.5 9.5l-5.6 1.9L12 17l-1.9-5.6L4.5 9.5l5.6-1.9z"/></svg>
       <label for="askInput" style="position:absolute;left:-9999px">Search or ask</label>
-      <input id="askInput" placeholder="Ask: “Trump over 80% in Wyoming”, “go to Moab” or a precinct code">
+      <input id="askInput" placeholder="Ask: “2026 Mike Kennedy race”, “Trump over 80% in Wyoming”, “go to Moab” or a precinct code">
       <button type="submit" class="btn-red">Search</button>
     </form>
 
@@ -304,7 +304,7 @@ const RACES = {
   sth:   { file: F26, title: "2026 State House", r: "Republican", d: "Democrat", attr: SRC26 },
   ssen:  { file: F26, title: "2026 State Senate", r: "Republican", d: "Democrat", attr: SRC26 }
 };
-let race = "p2024";
+let race = "house"; // opens on the 2026 U.S. House races
 const RAMP = ["#a50f15","#de2d26","#fb6a4a","#fcbba1","#c6dbef","#6baed6","#2171b5","#08306b"];
 const RAMP_M = ["#7f2704","#d94801","#fd8d3c","#fdd0a2","#c7e9c0","#74c476","#238b45","#00441b"]; // ballot measures: against ↔ for
 const TIE = "#facc15"; // tied precincts
@@ -553,6 +553,62 @@ const COUNTIES = {
   WY: "Albany,Big Horn,Campbell,Carbon,Converse,Crook,Fremont,Goshen,Hot Springs,Johnson,Laramie,Lincoln,Natrona,Niobrara,Park,Platte,Sheridan,Sublette,Sweetwater,Teton,Uinta,Washakie,Weston".split(",")
 };
 
+// ---------- Search box: switching races ("show me the 2026 Mike Kennedy race") ----------
+const norm = t => " " + t.toLowerCase().replace(/[“”"'.,]/g, "").replace(/\s+/g, " ") + " ";
+let candIndex = null;
+async function candidates() {
+  if (candIndex) return candIndex;
+  const sw = await getRaw(SW), list = [];
+  for (const k of ["house", "sen", "gov", "sth", "ssen"]) for (const st of ["UT", "WY"]) for (const x of (sw[st].totals[k] || []))
+    for (const [n, side] of [[x.rn, "R"], [x.dn, "D"], [x.o && x.o.n, "O"]])
+      if (n && !/write-in/i.test(n)) list.push({ name: n, key: norm(n).trim(), last: norm(n).trim().split(" ").pop(), k, st, dist: x.dist, side, rn: x.rn, dn: x.dn });
+  return candIndex = list;
+}
+// Figures out which race a search is about. Returns null if it doesn't mention one.
+async function raceIntent(raw) {
+  let q = norm(raw), k = null, cand = null, dist = null;
+  const take = re => { const m = q.match(re); if (m) q = q.replace(re, " "); return m; };
+  // A candidate by full name, or by a last name only one 2026 candidate has
+  try {
+    const list = await candidates();
+    cand = list.find(c => q.includes(" " + c.key + " "));
+    if (!cand) { const ms = list.filter(c => c.last.length > 3 && q.includes(" " + c.last + " ")); if (ms.length && ms.every(c => c.k === ms[0].k && c.dist === ms[0].dist)) cand = ms[0]; }
+    if (cand) { q = q.replace(" " + cand.key + " ", " ").replace(" " + cand.last + " ", " "); k = cand.k; }
+  } catch {}
+  if (!k) {
+    if (take(/ state senate | (?:sd|senate district) ?(\d+) /)) k = "ssen";
+    else if (take(/ state house | (?:hd|house district) ?(\d+) | legislature | legislative /)) k = "sth";
+    else if (take(/ governors? | gubernatorial /)) k = "gov";
+    else if (take(/ (?:us |u s )?senate | senators? /)) k = "sen";
+    else if (take(/ (?:us |u s )?house | congress(?:ional)? | congressman | congresswoman /)) k = "house";
+    else if (take(/ president(?:ial)? /) || / (trump|harris) /.test(q)) k = "p2024";
+    else if (/ 2024 /.test(q)) k = "p2024";
+    else if (/ 2026 /.test(q)) k = "house";
+  }
+  if (!k) return null;
+  const d = norm(raw).match(/ (?:hd|house district) ?(\d+) /), sd = norm(raw).match(/ (?:sd|senate district) ?(\d+) /), cd = norm(raw).match(/ (ut|utah|wy)[- ]?(\d|al) /);
+  if (!cand && k === "sth" && d) dist = "HD " + d[1];
+  if (!cand && k === "ssen" && sd) dist = "SD " + sd[1];
+  if (!cand && k === "house" && cd) dist = (cd[1] === "wy" ? "WY-" : "UT-") + cd[2].toUpperCase();
+  const STOP = / (?:show|me|the|a|an|race|races|results?|map|of|for|in|on|view|see|look|at|switch|to|please|2024|2026|election|elections|whats|what|is) /;
+  while (STOP.test(q)) q = q.replace(STOP, " ");
+  return { k, cand, dist, rest: q.trim() };
+}
+async function runRaceSearch(ri, raw) {
+  filterFn = null; lastQuery = null;
+  if (ri.k !== race || !map.hasLayer(precincts)) await setRace(ri.k);
+  await loadPrecincts();
+  const tests = [], tags = [RACES[ri.k].title];
+  const inDist = dd => p => dd === "Statewide" ? p.s === ri.cand.st : (p.dist || "").split(/,\s*/).includes(dd);
+  if (ri.cand) { tests.push(inDist(ri.cand.dist)); tags.push(`${ri.cand.name}${ri.cand.dist === "Statewide" ? "" : " · " + ri.cand.dist}`); }
+  else if (ri.dist) { tests.push(p => (p.dist || "").split(/,\s*/).includes(ri.dist)); tags.push(ri.dist); }
+  if (ri.rest) { const pq = parseQuery(ri.rest); if (pq.tests) { tests.push(...pq.tests); tags.push(...pq.tags); } }
+  const lbl = ri.cand && ri.cand.rn && ri.cand.dn ? { r: short(ri.cand.rn), d: short(ri.cand.dn) } : null;
+  if (tests.length) return applyTests(tests, tags, `“${raw}”`, lbl);
+  precincts.setStyle(precinctStyle);
+  showResult(`Showing <b>${RACES[ri.k].title}</b>`, []);
+}
+
 // ---------- Search box (plain-English) ----------
 const num = s => parseFloat(String(s).replace(/,/g, ""));
 function parseQuery(raw) {
@@ -595,9 +651,10 @@ function parseQuery(raw) {
   return { tests, tags };
 }
 
-async function applyTests(tests, tags, label) {
+async function applyTests(tests, tags, label, lbl) {
   if (!tests.length) { clearFilter(); return; }
-  lastQuery = [tests, tags, label];
+  lastQuery = [tests, tags, label, lbl];
+  const N = lbl || LBL;
   if (!map.hasLayer(precincts)) setLayer("rElection", true);
   await loadPrecincts();
   filterFn = p => tests.every(t => t(p));
@@ -606,7 +663,7 @@ async function applyTests(tests, tags, label) {
   if (!hits.length) return showResult(`No precincts match ${label}.`, tags);
   let r = 0, d = 0, t = 0;
   hits.forEach(f => { r += f.properties.r; d += f.properties.d; t += f.properties.t; });
-  showResult(`<b>${fmt(hits.length)}</b> precincts · ${fmt(t)} votes · ${LBL.r} ${pct(r, t).toFixed(1)}% · ${LBL.d} ${pct(d, t).toFixed(1)}%`, tags);
+  showResult(`<b>${fmt(hits.length)}</b> precincts · ${fmt(t)} votes · ${N.r} ${pct(r, t).toFixed(1)}% · ${N.d} ${pct(d, t).toFixed(1)}%`, tags);
   map.fitBounds(L.geoJSON({ type: "FeatureCollection", features: hits }).getBounds(), { padding: [60, 60], maxZoom: 12 });
 }
 
@@ -643,10 +700,12 @@ function clearFilter() {
   filterFn = null; lastQuery = null; precincts.setStyle(precinctStyle);
   $("result").classList.remove("show"); $("askInput").value = "";
 }
-$("ask").onsubmit = e => {
+$("ask").onsubmit = async e => {
   e.preventDefault();
   const raw = $("askInput").value; if (!raw.trim()) return;
   const code = raw.trim().match(/^(?:precinct\s+)?([a-z]{0,3}\d[\w-]*)$/i);
+  const ri = await raceIntent(raw);
+  if (ri) return runRaceSearch(ri, raw);
   if (code) return findPrecinct(code[1]);
   const parsed = parseQuery(raw);
   parsed.place ? goToPlace(parsed.place) : applyTests(parsed.tests, parsed.tags, `“${raw}”`);
@@ -658,7 +717,7 @@ map.on("click", () => { $("basePanel").classList.remove("open"); openRacePanel(f
 // Shorter search hint on small screens
 const phoneMQ = matchMedia("(max-width: 760px), (max-height: 500px)");
 const longHint = $("askInput").placeholder;
-const syncHint = () => { $("askInput").placeholder = phoneMQ.matches ? "Search a place or ask…" : longHint; };
+const syncHint = () => { $("askInput").placeholder = phoneMQ.matches ? "Search a race, place or precinct…" : longHint; };
 phoneMQ.addEventListener("change", syncHint); syncHint();
 setLayer("rElection", true); // show results when the page opens
 map.on("mousemove", e => setStatus(`${e.latlng.lat.toFixed(4)}, ${e.latlng.lng.toFixed(4)}`));
