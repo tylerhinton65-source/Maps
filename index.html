@@ -96,7 +96,7 @@
   .raceNote { margin: 4px 2px 0; font-size: 11px; line-height: 1.45; color: #64748b; }
   #basePanel h5 { margin: 0 0 4px; font-size: 11px; font-weight: 700; color: var(--red-dark); text-transform: uppercase; letter-spacing: .06em; }
   /* ---------- Statewide totals ---------- */
-  #totalsPanel { display: none; position: absolute; top: 16px; right: 80px; z-index: 1001; width: 360px; max-height: calc(100vh - 140px); overflow-y: auto; background: white; border-radius: 14px; box-shadow: var(--shadow); padding: 14px 16px 16px; }
+  #totalsPanel { display: none; position: absolute; top: 16px; right: 80px; z-index: 1001; width: 360px; max-height: calc(100vh - 240px); overflow-y: auto; background: white; border-radius: 14px; box-shadow: var(--shadow); padding: 14px 16px 16px; }
   #totalsPanel.open { display: block; }
   #totalsPanel .tHead { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
   #totalsPanel h5 { margin: 0; font-size: 11px; font-weight: 700; color: var(--red-dark); text-transform: uppercase; letter-spacing: .06em; }
@@ -583,7 +583,7 @@ function stateTotals(st, list, k) {
   let r = 0, d = 0, t = 0; list.forEach(x => { r += x.r; d += x.d; t += x.t; });
   if (list.length === 1) {
     const x = list[0], w = winner(x);
-    return `<div class="tState"><h6>${name}<small>${esc(x.dist === "Statewide" ? "" : x.dist)} · ${fmt(t)} votes</small></h6>${voteRows(r, d, t, x.rn || "Republican", x.dn || "Democrat")}
+    return `<div class="tState"><h6>${name}<small>${x.dist === "Statewide" ? "" : esc(x.dist) + " · "}${fmt(t)} votes</small></h6>${voteRows(r, d, t, x.rn || "Republican", x.dn || "Democrat")}
       <div class="tSub">Winner</div><div style="font-size:13px;font-weight:600"><span class="dot" style="display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:6px;background:${PC[w.p]}"></span>${esc(w.n)} · +${(w.m * 100).toFixed(1)}</div></div>`;
   }
   const ws = list.map(x => ({ x, w: winner(x) }));
