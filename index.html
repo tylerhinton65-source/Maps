@@ -256,7 +256,7 @@
         <div data-pane="election" style="display:flex;flex-direction:column;gap:16px;flex:1">
           <div><h4 id="fTitle">Election 2024</h4><div class="sub" id="fSub">Filter precincts by how they voted for president</div></div>
           <div class="field"><span>State</span>
-            <div class="seg" id="fState"><button type="button" data-v="" class="on">Both</button><button type="button" data-v="UT">Utah</button><button type="button" data-v="WY">Wyoming</button></div></div>
+            <div class="seg" id="fState"><button type="button" data-v="" class="on">All</button><button type="button" data-v="UT">Utah</button><button type="button" data-v="WY">Wyoming</button><button type="button" data-v="SD">S. Dakota</button></div></div>
           <div class="field"><span>County</span><select id="fCounty" aria-label="County"><option value="">Any county</option></select></div>
           <div class="field"><span>Winner</span>
             <div class="seg" id="fWinner"><button type="button" data-v="" class="on">Either</button><button type="button" data-v="r" id="fWinR">Trump</button><button type="button" data-v="d" id="fWinD">Harris</button></div></div>
@@ -643,7 +643,8 @@ $("filterBtn").addEventListener("click", () => openTotals(false));
 // ---------- Filters dropdown ----------
 const COUNTIES = {
   UT: "Beaver,Box Elder,Cache,Carbon,Daggett,Davis,Duchesne,Emery,Garfield,Grand,Iron,Juab,Kane,Millard,Morgan,Piute,Rich,Salt Lake,San Juan,Sanpete,Sevier,Summit,Tooele,Uintah,Utah,Wasatch,Washington,Wayne,Weber".split(","),
-  WY: "Albany,Big Horn,Campbell,Carbon,Converse,Crook,Fremont,Goshen,Hot Springs,Johnson,Laramie,Lincoln,Natrona,Niobrara,Park,Platte,Sheridan,Sublette,Sweetwater,Teton,Uinta,Washakie,Weston".split(",")
+  WY: "Albany,Big Horn,Campbell,Carbon,Converse,Crook,Fremont,Goshen,Hot Springs,Johnson,Laramie,Lincoln,Natrona,Niobrara,Park,Platte,Sheridan,Sublette,Sweetwater,Teton,Uinta,Washakie,Weston".split(","),
+  SD: "Aurora,Beadle,Bennett,Bon Homme,Brookings,Brown,Brule,Buffalo,Butte,Campbell,Charles Mix,Clark,Clay,Codington,Corson,Custer,Davison,Day,Deuel,Dewey,Douglas,Edmunds,Fall River,Faulk,Grant,Gregory,Haakon,Hamlin,Hand,Hanson,Harding,Hughes,Hutchinson,Hyde,Jackson,Jerauld,Jones,Kingsbury,Lake,Lawrence,Lincoln,Lyman,Marshall,McCook,McPherson,Meade,Mellette,Miner,Minnehaha,Moody,Oglala Lakota,Pennington,Perkins,Potter,Roberts,Sanborn,Spink,Stanley,Sully,Todd,Tripp,Turner,Union,Walworth,Yankton,Ziebach".split(",")
 };
 const SOON = {
   land: ["Land", "Private vs. public land, acreage range, parcels bordering BLM or Forest Service land, hiding landlocked parcels."],
@@ -657,7 +658,7 @@ const F = { state: "", county: "", winner: "", min: "", max: "", close: false };
 
 function fillCounties() {
   const sel = $("fCounty"), keep = sel.value;
-  const list = F.state ? COUNTIES[F.state].map(c => [F.state, c]) : [...COUNTIES.UT.map(c => ["UT", c]), ...COUNTIES.WY.map(c => ["WY", c])];
+  const list = F.state ? COUNTIES[F.state].map(c => [F.state, c]) : Object.entries(COUNTIES).flatMap(([st, l]) => l.map(c => [st, c]));
   sel.innerHTML = '<option value="">Any county</option>' + list.map(([s, c]) => `<option value="${s}|${c}">${c}${F.state ? "" : ", " + s}</option>`).join("");
   sel.value = list.some(([s, c]) => `${s}|${c}` === keep) ? keep : "";
 }
@@ -718,13 +719,16 @@ function parseQuery(raw) {
   if (go && !/precinct|trump|harris|county|won|vote|%|competitive|close|over|under/.test(go[1])) return { place: go[1].trim() };
   const saysWY = /\b(wyoming|wy)\b/.test(q);
   const saysUT = /\b(utah|ut)\b(?!\s+(county|co\b))/.test(q);
-  const state = saysWY && !saysUT ? "WY" : saysUT && !saysWY ? "UT" : null;
+  const saysSD = /\bsouth dakota\b|\bs\.?d\b(?!\s*-?\d)/.test(q);
+  const said = [saysUT && "UT", saysWY && "WY", saysSD && "SD"].filter(Boolean);
+  const state = said.length === 1 ? said[0] : null;
   if (state) add(p => p.s === state, SN[state]);
   const ct = [], ctag = [];
   for (const [st, list] of Object.entries(COUNTIES)) for (const c of list) {
     const m = q.match(new RegExp("\\b" + c.toLowerCase() + "(\\s+county|\\s+co\\b)?\\b"));
-    if (!m || (c === "Utah" && !m[1]) || (state && state !== st)) continue;
-    ct.push(p => p.c === c && p.s === st); ctag.push(`${c} County${c === "Carbon" && !state ? ` (${st})` : ""}`);
+    if (!m || (c === "Utah" && !m[1]) || (st === "SD" && !m[1] && state !== "SD") || (state && state !== st)) continue;
+    const shared = Object.entries(COUNTIES).filter(([s2, l2]) => s2 !== st && l2.includes(c)).length;
+    ct.push(p => p.c === c && p.s === st); ctag.push(`${c} County${shared && !state ? ` (${st})` : ""}`);
   }
   if (ct.length) add(p => ct.some(t => t(p)), ctag.join(" or "));
   const names = side => [...new Set((precinctData && race !== "p2024" ? precinctData.features : []).map(f => f.properties[side]).filter(Boolean).map(n => short(n).toLowerCase()))].join("|");
@@ -769,9 +773,9 @@ async function applyTests(tests, tags, label) {
 async function goToPlace(place) {
   showResult(`Looking up “${place}”…`, []);
   try {
-    const url = "https://nominatim.openstreetmap.org/search?format=json&limit=1&countrycodes=us&viewbox=-114.1,45.1,-104,36.9&bounded=1&q=" + encodeURIComponent(place);
-    const res = await (await fetch(url)).json();
-    if (!res.length) return showResult(`Couldn't find “${place}” in Utah or Wyoming.`, []);
+    const url = "https://nominatim.openstreetmap.org/search?format=json&limit=10&addressdetails=1&countrycodes=us&viewbox=-114.1,46,-96.4,36.9&bounded=1&q=" + encodeURIComponent(place);
+    const res = (await (await fetch(url)).json()).filter(x => ["Utah", "Wyoming", "South Dakota"].includes((x.address || {}).state));
+    if (!res.length) return showResult(`Couldn't find “${place}” in Utah, Wyoming or South Dakota.`, []);
     const b = res[0].boundingbox.map(Number);
     map.fitBounds([[b[0], b[2]], [b[1], b[3]]], { maxZoom: 13 });
     showResult(`📍 ${res[0].display_name.split(",").slice(0, 3).join(",")}`, []);
