@@ -235,7 +235,7 @@
 </div>
 
 <div id="legends">
-  <div class="legend" id="lgElection"><b id="lgTitle">2024 president</b><div class="ramp" id="ramp"></div><div class="ramp-labels"><span id="lgR">Trump +60</span><span>Even</span><span id="lgD">Harris +60</span></div></div>
+  <div class="legend" id="lgElection"><b id="lgTitle">2024 president</b><div class="ramp" id="ramp"></div><div class="ramp-labels"><span id="lgR">Trump +60</span><span>Even</span><span id="lgD">Harris +60</span></div><div class="keys" style="margin-top:6px"><span><i style="background:#facc15"></i>Tied</span></div></div>
   <div class="legend" id="lgLand"><b>Land ownership</b><div class="keys">
     <span><i style="background:#fee67a"></i>BLM</span><span><i style="background:#cde3a6"></i>Forest Service</span>
     <span><i style="background:#cab3d6"></i>National Park</span><span><i style="background:#9dc8e4"></i>State</span>
@@ -312,6 +312,8 @@ const RACES = {
 let race = "p2024";
 const RAMP = ["#a50f15","#de2d26","#fb6a4a","#fcbba1","#c6dbef","#6baed6","#2171b5","#08306b"];
 const RAMP_M = ["#7f2704","#d94801","#fd8d3c","#fdd0a2","#c7e9c0","#74c476","#238b45","#00441b"]; // ballot measures: against ↔ for
+const TIE = "#facc15"; // tied precincts
+const isTie = p => p.t > 0 && p.r === p.d;
 const ramp = () => RACES[race].measure ? RAMP_M : RAMP;
 function marginColor(m) {
   const R = ramp();
@@ -325,7 +327,7 @@ const short = n => n.split(" ").slice(-1)[0];
 let filterFn = null;
 function precinctStyle(f) {
   const on = !filterFn || filterFn(f.properties);
-  const fill = marginColor(f.properties.m);
+  const fill = isTie(f.properties) ? TIE : marginColor(f.properties.m);
   // Zoomed out: outline each precinct in its own fill color so seams between neighbors are covered.
   if (map.getZoom() < SEAM_ZOOM) return { fillColor: fill, fillOpacity: on ? 0.65 : 0.04, color: fill, weight: on ? 1.2 : 0.6, opacity: on ? 0.65 : 0.04 };
   return { fillColor: fill, fillOpacity: on ? 0.65 : 0.04, color: on ? "#334155" : "#94a3b8", weight: on ? 0.4 : 0.2, opacity: on ? 0.6 : 0.2 };
@@ -361,8 +363,9 @@ function loadPrecincts() {
   setStatus("Loading precincts…");
   loading = getRaw(RACES[k].file).then(raw => {
     if (k !== race) return precinctData;
-    const d = k === "p2024" ? raw : { type: "FeatureCollection", features: raw.features.filter(f => f.properties.races[k]).map(f =>
-      ({ type: "Feature", geometry: f.geometry, properties: { ...f.properties, ...f.properties.races[k], o: 1 } })) };
+    const all = k === "p2024" ? raw.features : raw.features.filter(f => f.properties.races[k]).map(f =>
+      ({ type: "Feature", geometry: f.geometry, properties: { ...f.properties, ...f.properties.races[k], o: 1 } }));
+    const d = { type: "FeatureCollection", features: all.filter(f => f.properties.t > 0) }; // hide precincts with no votes
     precinctData = d; precincts.clearLayers(); precincts.addData(d);
     setStatus(`${fmt(d.features.length)} precincts · ${RACES[k].title}`); syncAttribution(); return d;
   }).catch(e => { loading = null; setStatus("Couldn't load precincts"); throw e; });
@@ -390,9 +393,9 @@ function showCard(p, sticky) {
   $("cWhere").textContent = `${p.c} County, ${p.s === "UT" ? "Utah" : "Wyoming"} · ${R.title.replace(/ · .*/, "")}${p.dist ? " · " + p.dist : ""}`;
   $("cName").textContent = `Precinct ${p.n}`;
   const rep = p.m < 0;
-  $("cLead").textContent = p.m === 0 ? "Tied" : `${rep ? (ms ? "Against" : short(rName(p))) : (ms ? "For" : short(dName(p)))} +${Math.abs(p.m * 100).toFixed(1)}`;
-  $("cLead").style.background = ms ? (rep ? "#ffedd5" : "#dcfce7") : rep ? "#fee2e2" : "#dbeafe";
-  $("cLead").style.color = ms ? (rep ? "#c2410c" : "#15803d") : rep ? "#b91c1c" : "#1d4ed8";
+  $("cLead").textContent = isTie(p) ? "Tied" : `${rep ? (ms ? "Against" : short(rName(p))) : (ms ? "For" : short(dName(p)))} +${Math.abs(p.m * 100).toFixed(1)}`;
+  $("cLead").style.background = isTie(p) ? "#fef9c3" : ms ? (rep ? "#ffedd5" : "#dcfce7") : rep ? "#fee2e2" : "#dbeafe";
+  $("cLead").style.color = isTie(p) ? "#a16207" : ms ? (rep ? "#c2410c" : "#15803d") : rep ? "#b91c1c" : "#1d4ed8";
   $("nRep").textContent = rName(p); $("nDem").textContent = dName(p);
   $("bRep").style.background = ms ? RAMP_M[1] : "var(--rep)"; $("bDem").style.background = ms ? RAMP_M[6] : "var(--dem)";
   $("nRep").previousElementSibling.style.background = $("bRep").style.background;
