@@ -51,6 +51,8 @@
   /* State outlines: same look as Statewide totals; icon greys out when outlines are off */
   #rStates, #rStates.on { background: var(--ink-2); color: #f87171 !important; }
   #rStates:hover { background: var(--ink-3); }
+  #rBase[aria-expanded="true"] { background: var(--red); color: white !important; }
+  #rBase[aria-expanded="true"] .tip { color: white; }
   #rStates:not(.on) { color: #64748b !important; }
 
   /* ---------- Layer rail ---------- */
@@ -222,7 +224,7 @@
 </div>
 
 <div id="rail">
-  <button class="rb on" id="rBase" style="--c:#dc2626;color:#fff" aria-label="Map options" aria-expanded="false"><svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="m12 3 9 5-9 5-9-5zM3 13l9 5 9-5"/></svg><span class="tip">Map options</span></button>
+  <button class="rb" id="rBase" style="--c:#dc2626;color:#f87171" aria-label="Map options" aria-expanded="false"><svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="m12 3 9 5-9 5-9-5zM3 13l9 5 9-5"/></svg><span class="tip">Map options</span></button>
   <button class="rb" id="rElection" style="--c:#dc2626;color:#f87171" aria-label="Election results" aria-expanded="false"><svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M5 20V10M12 20V4M19 20v-7"/></svg><span class="tip">Election results</span></button>
   <button class="rb" id="rTotals" style="--c:#dc2626;color:#f87171" aria-label="Statewide totals" aria-expanded="false"><svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 12V3h10v9M10.25 7.25l1.5 1.5 2.5-2.5M3 12h18v9H3zM9 16.5h6"/></svg><span class="tip">Statewide totals</span></button>
   <button class="rb on" id="rStates" style="--c:#475569;color:#cbd5e1" aria-label="State outlines" aria-pressed="true"><svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-dasharray="3 2.5"><rect x="4" y="4" width="16" height="16" rx="2"/></svg><span class="tip">State outlines</span></button>
@@ -556,7 +558,7 @@ async function renderTotals() {
 }
 function openTotals(open) {
   $("totalsPanel").classList.toggle("open", open); $("rTotals").classList.toggle("on", open); $("rTotals").setAttribute("aria-expanded", open);
-  if (open) { openRacePanel(false); $("basePanel").classList.remove("open"); renderTotals(); }
+  if (open) { openRacePanel(false); $("basePanel").classList.remove("open"); $("rBase").setAttribute("aria-expanded", "false"); renderTotals(); }
 }
 $("rTotals").onclick = () => openTotals(!$("totalsPanel").classList.contains("open"));
 $("lgTotals").onclick = () => openTotals(true);
@@ -734,7 +736,7 @@ function openMenu(open) { $("rail").classList.toggle("open", open); $("menuBtn")
 $("menuBtn").onclick = () => openMenu(!$("rail").classList.contains("open"));
 document.querySelectorAll("#rail .rb").forEach(b => b.addEventListener("click", () => openMenu(false)));
 // Close menus when clicking the map
-map.on("click", () => { openMenu(false); $("basePanel").classList.remove("open"); openRacePanel(false); if (phoneMQ.matches) openTotals(false); });
+map.on("click", () => { openMenu(false); $("basePanel").classList.remove("open"); $("rBase").setAttribute("aria-expanded", "false"); openRacePanel(false); if (phoneMQ.matches) openTotals(false); });
 // Shorter search hint on small screens
 const phoneMQ = matchMedia("(max-width: 760px), (max-height: 500px)");
 const longHint = $("askInput").placeholder;
