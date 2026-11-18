@@ -428,7 +428,7 @@ function showCard(p, sticky) {
   const oth = Math.max(0, p.t - p.r - p.d);
   const pr = pct(p.r, p.t), pd = pct(p.d, p.t), po = pct(oth, p.t);
   const R = RACES[race], ms = R.measure;
-  $("cWhere").textContent = p.county ? `Utah · ${R.title} · county total`
+  $("cWhere").textContent = p.county ? `${SN[p.s]} · ${R.title} · county total`
     : `${p.c} County, ${SN[p.s]} · ${R.title.replace(/ · .*/, "")}${p.dist ? " · " + p.dist : ""}`;
   $("cName").textContent = p.county ? `${p.c} County` : `Precinct ${p.n}`;
   const rep = p.m < 0;
