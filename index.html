@@ -114,6 +114,8 @@
     opacity: 0; transform: translateY(8px); transition: opacity .15s, transform .15s; pointer-events: none;
   }
   #card.show { opacity: 1; transform: none; }
+  #card.follow { bottom: auto; transition: opacity .12s; transform: none; }
+  #card.phone { left: 50% !important; right: auto; bottom: 30px; top: auto !important; transform: translateX(-50%); width: min(340px, calc(100vw - 28px)); }
   #card .where { font-size: 11px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); font-weight: 600; }
   #card .name { font-size: 16px; font-weight: 700; margin: 2px 0 10px; letter-spacing: -.01em; }
   #card .lead { display: inline-block; font-size: 13px; font-weight: 700; padding: 3px 10px; border-radius: 999px; margin-bottom: 12px; }
@@ -141,7 +143,6 @@
     #layers { position: absolute; right: 0; top: 56px; display: none; }
     #layers.open { display: block; }
     #layersToggle { display: block; margin-left: auto; }
-    #card { width: auto; right: 14px; }
     #status { display: none; }
     .leaflet-bottom.leaflet-left .leaflet-control-scale { margin-left: 10px; }
   }
@@ -285,9 +286,10 @@ function precinctStyle(f) {
 const precincts = L.geoJSON(null, {
   style: precinctStyle,
   onEachFeature: (f, layer) => {
-    layer.on("mouseover", e => { showCard(f.properties); e.target.setStyle({ weight: 2.5, color: "#0f172a", opacity: 1 }); e.target.bringToFront(); });
+    layer.on("mouseover", e => { showCard(f.properties); placeCard(e.originalEvent); e.target.setStyle({ weight: 2.5, color: "#0f172a", opacity: 1 }); e.target.bringToFront(); });
     layer.on("mouseout",  e => { hideCard(); precincts.resetStyle(e.target); });
-    layer.on("click",     () => showCard(f.properties, true));   // tap support on phones
+    layer.on("mousemove", e => placeCard(e.originalEvent));
+    layer.on("click",     e => { showCard(f.properties, isTouch); placeCard(e.originalEvent); });   // tap support on phones
   },
   attribution: 'Election data: <a href="https://github.com/nytimes/presidential-precinct-map-2024">The New York Times</a> (non-commercial use)'
 });
@@ -303,6 +305,19 @@ function loadPrecincts() {
 
 // ---------- Hover card ----------
 let cardTimer;
+const isTouch = matchMedia("(hover: none)").matches;
+const card = $("card");
+// Put the card just beside the mouse; flip left/up when it would run off the screen.
+function placeCard(ev) {
+  if (isTouch || !ev) { card.classList.add("phone"); card.classList.remove("follow"); return; }
+  card.classList.add("follow"); card.classList.remove("phone");
+  const gap = 18, w = card.offsetWidth, h = card.offsetHeight, W = innerWidth, H = innerHeight;
+  let x = ev.clientX + gap, y = ev.clientY + gap;
+  if (x + w > W - 8) x = ev.clientX - w - gap;
+  if (y + h > H - 8) y = ev.clientY - h - gap;
+  card.style.left = Math.max(8, x) + "px";
+  card.style.top = Math.max(8, y) + "px";
+}
 function showCard(p, sticky) {
   clearTimeout(cardTimer);
   const oth = Math.max(0, p.t - p.r - p.d);
