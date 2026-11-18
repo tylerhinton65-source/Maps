@@ -5,173 +5,445 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Land Finder — Utah & Wyoming</title>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <!-- Open connections to the map servers early so the first tiles arrive faster -->
 <link rel="preconnect" href="https://server.arcgisonline.com" crossorigin>
-<link rel="preconnect" href="https://services.arcgisonline.com" crossorigin>
 <link rel="preconnect" href="https://gis.blm.gov" crossorigin>
 <link rel="preconnect" href="https://basemap.nationalmap.gov" crossorigin>
 <link rel="preconnect" href="https://a.tile.openstreetmap.org" crossorigin>
 <style>
-  html, body { margin: 0; height: 100%; font-family: system-ui, sans-serif; }
-  #map { position: absolute; inset: 0; }
-  .title {
-    position: absolute; top: 10px; left: 50px; z-index: 1000;
-    background: rgba(255,255,255,.92); padding: 8px 12px; border-radius: 8px;
-    box-shadow: 0 1px 4px rgba(0,0,0,.3); font-weight: 600;
+  :root {
+    --panel: rgba(255,255,255,.88);
+    --border: rgba(15,23,42,.08);
+    --text: #0f172a;
+    --muted: #64748b;
+    --accent: #0f766e;
+    --accent-soft: #ccfbf1;
+    --rep: #dc2626;
+    --dem: #2563eb;
+    --other: #a3a3a3;
+    --shadow: 0 8px 30px rgba(15,23,42,.12), 0 1px 3px rgba(15,23,42,.08);
+    --radius: 16px;
   }
-  .title small { display: block; font-weight: 400; color: #555; }
-  .legend {
-    background: rgba(255,255,255,.92); padding: 8px 10px; border-radius: 8px;
-    box-shadow: 0 1px 4px rgba(0,0,0,.3); font-size: 12px; line-height: 18px;
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; font-family: Inter, system-ui, sans-serif; color: var(--text); }
+  #map { position: absolute; inset: 0; background: #e5e7eb; }
+
+  .glass {
+    background: var(--panel);
+    backdrop-filter: blur(14px) saturate(160%);
+    -webkit-backdrop-filter: blur(14px) saturate(160%);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
   }
-  .legend i { display: inline-block; width: 14px; height: 14px; margin-right: 6px; vertical-align: -2px; opacity: .8; }
-  #coords {
-    position: absolute; bottom: 24px; left: 10px; z-index: 1000;
-    background: rgba(255,255,255,.92); padding: 4px 8px; border-radius: 6px; font-size: 12px;
+
+  /* ---------- Top bar ---------- */
+  #topbar {
+    position: absolute; top: 14px; left: 14px; right: 14px; z-index: 1000;
+    display: flex; gap: 12px; align-items: flex-start; pointer-events: none;
+  }
+  #topbar > * { pointer-events: auto; }
+  .brand { display: flex; align-items: center; gap: 10px; padding: 10px 16px 10px 12px; white-space: nowrap; }
+  .brand .logo {
+    width: 34px; height: 34px; border-radius: 10px; display: grid; place-items: center;
+    background: linear-gradient(135deg, #14b8a6, #0f766e); color: white;
+  }
+  .brand h1 { font-size: 15px; margin: 0; font-weight: 700; letter-spacing: -.01em; }
+  .brand p { font-size: 12px; margin: 0; color: var(--muted); }
+
+  /* ---------- Search / AI box ---------- */
+  #askWrap { flex: 1; max-width: 640px; margin: 0 auto; }
+  #ask { display: flex; align-items: center; gap: 8px; padding: 6px 6px 6px 14px; }
+  #ask .spark { color: var(--accent); flex: none; }
+  #askInput {
+    flex: 1; border: 0; outline: 0; background: transparent; font: inherit; font-size: 14px;
+    padding: 8px 0; color: var(--text); min-width: 0;
+  }
+  #askInput::placeholder { color: #94a3b8; }
+  .btn {
+    border: 0; border-radius: 10px; padding: 8px 14px; font: inherit; font-size: 13px; font-weight: 600;
+    cursor: pointer; background: var(--accent); color: white; transition: background .15s;
+  }
+  .btn:hover { background: #115e59; }
+  .btn.ghost { background: transparent; color: var(--muted); padding: 8px 10px; }
+  .btn.ghost:hover { background: rgba(15,23,42,.06); color: var(--text); }
+  #chips { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; justify-content: center; }
+  .chip {
+    font-size: 12px; padding: 5px 10px; border-radius: 999px; cursor: pointer; border: 1px solid var(--border);
+    background: rgba(255,255,255,.8); color: #334155; backdrop-filter: blur(8px); transition: all .15s;
+  }
+  .chip:hover { border-color: var(--accent); color: var(--accent); }
+  #result {
+    display: none; margin-top: 8px; padding: 10px 12px 10px 14px; font-size: 13px;
+    align-items: center; gap: 10px;
+  }
+  #result.show { display: flex; }
+  #result .txt { flex: 1; line-height: 1.45; }
+  #result .tags { display: flex; gap: 4px; flex-wrap: wrap; margin-top: 4px; }
+  #result .tag { background: var(--accent-soft); color: var(--accent); font-size: 11px; font-weight: 600; padding: 2px 8px; border-radius: 999px; }
+
+  /* ---------- Layers panel ---------- */
+  #layers { width: 250px; padding: 14px; flex: none; }
+  #layers h3 { font-size: 11px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); margin: 0 0 8px; font-weight: 600; }
+  .seg { display: grid; grid-template-columns: repeat(4, 1fr); background: rgba(15,23,42,.06); border-radius: 10px; padding: 3px; gap: 2px; margin-bottom: 14px; }
+  .seg button { border: 0; background: transparent; font: inherit; font-size: 12px; padding: 6px 0; border-radius: 8px; cursor: pointer; color: #475569; }
+  .seg button.on { background: white; color: var(--text); font-weight: 600; box-shadow: 0 1px 3px rgba(0,0,0,.1); }
+  .toggle { display: flex; align-items: center; justify-content: space-between; padding: 8px 0; font-size: 13px; border-top: 1px solid var(--border); }
+  .toggle:first-of-type { border-top: 0; }
+  .switch { position: relative; width: 34px; height: 20px; flex: none; }
+  .switch input { display: none; }
+  .switch span { position: absolute; inset: 0; background: #cbd5e1; border-radius: 999px; transition: .2s; cursor: pointer; }
+  .switch span::after { content: ""; position: absolute; width: 16px; height: 16px; left: 2px; top: 2px; background: white; border-radius: 50%; transition: .2s; box-shadow: 0 1px 2px rgba(0,0,0,.2); }
+  .switch input:checked + span { background: var(--accent); }
+  .switch input:checked + span::after { transform: translateX(14px); }
+  .legend { margin: 2px 0 6px; display: none; }
+  .legend.show { display: block; }
+  .ramp { display: flex; height: 8px; border-radius: 4px; overflow: hidden; }
+  .ramp div { flex: 1; }
+  .ramp-labels { display: flex; justify-content: space-between; font-size: 11px; color: var(--muted); margin-top: 4px; }
+  .keys { display: grid; grid-template-columns: 1fr 1fr; gap: 4px 8px; font-size: 11px; color: #475569; }
+  .keys i { display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-right: 5px; vertical-align: -1px; }
+  #layersToggle { display: none; }
+
+  /* ---------- Hover card ---------- */
+  #card {
+    position: absolute; left: 14px; bottom: 30px; z-index: 1000; width: 300px; padding: 16px;
+    opacity: 0; transform: translateY(8px); transition: opacity .15s, transform .15s; pointer-events: none;
+  }
+  #card.show { opacity: 1; transform: none; }
+  #card .where { font-size: 11px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); font-weight: 600; }
+  #card .name { font-size: 16px; font-weight: 700; margin: 2px 0 10px; letter-spacing: -.01em; }
+  #card .lead { display: inline-block; font-size: 13px; font-weight: 700; padding: 3px 10px; border-radius: 999px; margin-bottom: 12px; }
+  .bar { display: flex; height: 12px; border-radius: 6px; overflow: hidden; background: #f1f5f9; margin-bottom: 12px; }
+  .bar div { height: 100%; transition: width .25s ease; }
+  .cand { display: grid; grid-template-columns: 12px 1fr auto auto; gap: 8px; align-items: center; font-size: 13px; padding: 4px 0; }
+  .cand .dot { width: 10px; height: 10px; border-radius: 3px; }
+  .cand .pct { font-weight: 700; width: 52px; text-align: right; font-variant-numeric: tabular-nums; }
+  .cand .votes { color: var(--muted); font-variant-numeric: tabular-nums; }
+  #card .foot { display: flex; justify-content: space-between; font-size: 12px; color: var(--muted); margin-top: 8px; padding-top: 10px; border-top: 1px solid var(--border); }
+
+  #status {
+    position: absolute; bottom: 30px; right: 64px; z-index: 1000; font-size: 12px; padding: 6px 10px;
+    border-radius: 10px; color: #475569; font-variant-numeric: tabular-nums;
+  }
+  .leaflet-control-attribution { font-size: 10px; background: rgba(255,255,255,.7) !important; }
+  .leaflet-control-zoom { border: 0 !important; box-shadow: var(--shadow) !important; border-radius: 12px !important; overflow: hidden; }
+  .leaflet-control-zoom a { width: 36px !important; height: 36px !important; line-height: 36px !important; }
+  .leaflet-bottom.leaflet-left .leaflet-control-scale { margin-left: 330px; }
+
+  @media (max-width: 820px) {
+    #topbar { flex-wrap: wrap; }
+    .brand p { display: none; }
+    #askWrap { order: 3; flex-basis: 100%; }
+    #layers { position: absolute; right: 0; top: 56px; display: none; }
+    #layers.open { display: block; }
+    #layersToggle { display: block; margin-left: auto; }
+    #card { width: auto; right: 14px; }
+    #status { display: none; }
+    .leaflet-bottom.leaflet-left .leaflet-control-scale { margin-left: 10px; }
   }
 </style>
 </head>
 <body>
 <div id="map"></div>
-<div class="title">Land Finder<small>Utah &amp; Wyoming</small></div>
-<div id="coords">Move the mouse over the map</div>
+
+<div id="topbar">
+  <div class="brand glass">
+    <div class="logo">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 20 6-12 4 7 3-4 5 9z"/></svg>
+    </div>
+    <div><h1>Land Finder</h1><p>Utah &amp; Wyoming</p></div>
+  </div>
+
+  <div id="askWrap">
+    <form id="ask" class="glass" autocomplete="off">
+      <svg class="spark" width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l1.9 5.6L19.5 9.5l-5.6 1.9L12 17l-1.9-5.6L4.5 9.5l5.6-1.9zM19 14l.9 2.6 2.6.9-2.6.9L19 21l-.9-2.6-2.6-.9 2.6-.9z"/></svg>
+      <input id="askInput" placeholder="Try “Trump over 80% in Wyoming” or “go to Moab”">
+      <button type="submit" class="btn">Search</button>
+    </form>
+    <div id="chips">
+      <span class="chip">Competitive precincts</span>
+      <span class="chip">Harris won in Utah</span>
+      <span class="chip">Trump over 85%</span>
+      <span class="chip">Teton County</span>
+      <span class="chip">Go to Cody, WY</span>
+    </div>
+    <div id="result" class="glass">
+      <div class="txt"><div id="resultText"></div><div class="tags" id="resultTags"></div></div>
+      <button class="btn ghost" id="clearBtn" type="button">Clear</button>
+    </div>
+  </div>
+
+  <button id="layersToggle" class="btn glass" style="color:var(--text);background:var(--panel)">Layers</button>
+
+  <div id="layers" class="glass">
+    <h3>Base map</h3>
+    <div class="seg" id="baseSeg">
+      <button data-base="Topo" class="on">Topo</button>
+      <button data-base="Satellite">Satellite</button>
+      <button data-base="Streets">Streets</button>
+      <button data-base="USGS" title="USGS topo: more detail, slower">USGS</button>
+    </div>
+    <h3>Overlays</h3>
+    <label class="toggle">Election 2024 by precinct
+      <span class="switch"><input type="checkbox" id="tElection"><span></span></span></label>
+    <div class="legend" id="lgElection">
+      <div class="ramp" id="ramp"></div>
+      <div class="ramp-labels"><span>Trump +60</span><span>Even</span><span>Harris +60</span></div>
+    </div>
+    <label class="toggle">Land ownership
+      <span class="switch"><input type="checkbox" id="tLand"><span></span></span></label>
+    <div class="legend" id="lgLand">
+      <div class="keys">
+        <span><i style="background:#fee67a"></i>BLM</span>
+        <span><i style="background:#cde3a6"></i>Forest Service</span>
+        <span><i style="background:#cab3d6"></i>National Park</span>
+        <span><i style="background:#9dc8e4"></i>State</span>
+        <span><i style="background:#fbb4c9"></i>Tribal</span>
+        <span><i style="background:#fff;border:1px solid #cbd5e1"></i>Mostly private</span>
+      </div>
+    </div>
+    <label class="toggle">State outlines
+      <span class="switch"><input type="checkbox" id="tStates" checked><span></span></span></label>
+  </div>
+</div>
+
+<div id="card" class="glass">
+  <div class="where" id="cWhere"></div>
+  <div class="name" id="cName"></div>
+  <div class="lead" id="cLead"></div>
+  <div class="bar"><div id="bRep" style="background:var(--rep)"></div><div id="bOth" style="background:var(--other)"></div><div id="bDem" style="background:var(--dem)"></div></div>
+  <div class="cand"><span class="dot" style="background:var(--rep)"></span><span>Trump</span><span class="votes" id="vRep"></span><span class="pct" id="pRep"></span></div>
+  <div class="cand"><span class="dot" style="background:var(--dem)"></span><span>Harris</span><span class="votes" id="vDem"></span><span class="pct" id="pDem"></span></div>
+  <div class="cand"><span class="dot" style="background:var(--other)"></span><span>Other</span><span class="votes" id="vOth"></span><span class="pct" id="pOth"></span></div>
+  <div class="foot"><span id="cTotal"></span><span id="cBoundary"></span></div>
+</div>
+
+<div id="status" class="glass">Ready</div>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
-const coords = document.getElementById("coords");
+const $ = id => document.getElementById(id);
+const setStatus = t => { $("status").textContent = t; };
+const fmt = n => n.toLocaleString();
+const pct = (a, b) => b ? (a / b * 100) : 0;
 
 // ---------- Speed settings shared by every layer ----------
-// updateWhenZooming:false -> don't fetch tiles for the in-between zoom levels, only where you land
-// keepBuffer:6            -> keep more already-loaded tiles around the edges so panning back is instant
 const fast = { updateWhenZooming: false, keepBuffer: 6 };
 
 // ---------- Base maps ----------
 const baseMaps = {
-  "Topo": L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}", {
-    ...fast, maxZoom: 19, attribution: "Topo &copy; Esri, USGS"
-  }),
-  "Satellite": L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}", {
-    ...fast, maxZoom: 19, attribution: "Imagery &copy; Esri"
-  }),
-  "Streets": L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-    ...fast, maxZoom: 19, attribution: "&copy; OpenStreetMap contributors"
-  }),
-  "USGS Topo (detailed, slower)": L.tileLayer("https://basemap.nationalmap.gov/arcgis/rest/services/USGSTopo/MapServer/tile/{z}/{y}/{x}", {
-    ...fast, maxNativeZoom: 16, maxZoom: 19, attribution: "USGS The National Map"
-  })
+  Topo: L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}", { ...fast, maxZoom: 19, attribution: "Topo &copy; Esri, USGS" }),
+  Satellite: L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}", { ...fast, maxZoom: 19, attribution: "Imagery &copy; Esri" }),
+  Streets: L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", { ...fast, maxZoom: 19, attribution: "&copy; OpenStreetMap contributors" }),
+  USGS: L.tileLayer("https://basemap.nationalmap.gov/arcgis/rest/services/USGSTopo/MapServer/tile/{z}/{y}/{x}", { ...fast, maxNativeZoom: 16, maxZoom: 19, attribution: "USGS The National Map" })
 };
+const map = L.map("map", { layers: [baseMaps.Topo], preferCanvas: true, zoomControl: false });
+L.control.zoom({ position: "bottomright" }).addTo(map);
+L.control.scale({ imperial: true, metric: false, position: "bottomleft" }).addTo(map);
 
-const map = L.map("map", { layers: [baseMaps["Topo"]], preferCanvas: true });
+let currentBase = baseMaps.Topo;
+document.querySelectorAll("#baseSeg button").forEach(b => b.onclick = () => {
+  document.querySelectorAll("#baseSeg button").forEach(x => x.classList.toggle("on", x === b));
+  map.removeLayer(currentBase); currentBase = baseMaps[b.dataset.base]; currentBase.addTo(map); currentBase.bringToBack();
+});
 
 // ---------- State outlines ----------
-// Utah and Wyoming share the same corner points, so their common border is drawn once.
-const UT_WY_X = -111.0467;   // north–south line where Utah's NE notch meets Wyoming
-const states = {
-  type: "FeatureCollection",
-  features: [
-    { type: "Feature", properties: { name: "Utah" }, geometry: { type: "Polygon", coordinates: [[
-      [-114.0506, 37.0000], [-109.0452, 37.0000], [-109.0501, 41.0000], [UT_WY_X, 41.0000],
-      [UT_WY_X, 42.0016], [-114.0396, 42.0016], [-114.0506, 37.0000]
-    ]]}},
-    { type: "Feature", properties: { name: "Wyoming" }, geometry: { type: "Polygon", coordinates: [[
-      [UT_WY_X, 41.0000], [-109.0501, 41.0000], [-104.0530, 41.0016], [-104.0579, 44.9976],
-      [-111.0562, 44.9988], [-111.0446, 42.0016], [UT_WY_X, 42.0016], [UT_WY_X, 41.0000]
-    ]]}}
-  ]
-};
-const stateLayer = L.geoJSON(states, {
-  style: { color: "#d62828", weight: 2.5, opacity: 0.8, fill: false },
-  onEachFeature: (f, layer) => layer.bindTooltip(f.properties.name, { sticky: true })
-}).addTo(map);
-map.fitBounds(stateLayer.getBounds(), { padding: [20, 20] });
+const UT_WY_X = -111.0467;
+const states = { type: "FeatureCollection", features: [
+  { type: "Feature", properties: { name: "Utah" }, geometry: { type: "Polygon", coordinates: [[
+    [-114.0506, 37.0000], [-109.0452, 37.0000], [-109.0501, 41.0000], [UT_WY_X, 41.0000],
+    [UT_WY_X, 42.0016], [-114.0396, 42.0016], [-114.0506, 37.0000]]]}},
+  { type: "Feature", properties: { name: "Wyoming" }, geometry: { type: "Polygon", coordinates: [[
+    [UT_WY_X, 41.0000], [-109.0501, 41.0000], [-104.0530, 41.0016], [-104.0579, 44.9976],
+    [-111.0562, 44.9988], [-111.0446, 42.0016], [UT_WY_X, 42.0016], [UT_WY_X, 41.0000]]]}}
+]};
+const stateLayer = L.geoJSON(states, { style: { color: "#0f172a", weight: 2, opacity: 0.55, fill: false }, interactive: false }).addTo(map);
+map.fitBounds(stateLayer.getBounds(), { padding: [40, 40] });
 
-// ---------- Overlays ----------
+// ---------- Land ownership (BLM) ----------
 const landOwnership = L.tileLayer(
   "https://gis.blm.gov/arcgis/rest/services/lands/BLM_Natl_SMA_Cached_without_PriUnk/MapServer/tile/{z}/{y}/{x}",
-  { ...fast, maxZoom: 19, opacity: 0.55, attribution: "BLM Surface Management Agency" }
-);
+  { ...fast, maxZoom: 19, opacity: 0.55, attribution: "BLM Surface Management Agency" });
 
-// ---------- 2024 election results by precinct (NYT) ----------
-// Margin buckets, from big Trump win (deep red) to big Harris win (deep blue)
+// ---------- 2024 election by precinct (NYT) ----------
+const RAMP = ["#a50f15","#de2d26","#fb6a4a","#fcbba1","#c6dbef","#6baed6","#2171b5","#08306b"];
 function marginColor(m) {
-  if (m <= -0.6) return "#a50f15";
-  if (m <= -0.4) return "#de2d26";
-  if (m <= -0.2) return "#fb6a4a";
-  if (m <  0)    return "#fcbba1";
-  if (m <  0.2)  return "#c6dbef";
-  if (m <  0.4)  return "#6baed6";
-  if (m <  0.6)  return "#2171b5";
-  return "#08306b";
+  if (m <= -0.6) return RAMP[0]; if (m <= -0.4) return RAMP[1]; if (m <= -0.2) return RAMP[2]; if (m < 0) return RAMP[3];
+  if (m < 0.2) return RAMP[4]; if (m < 0.4) return RAMP[5]; if (m < 0.6) return RAMP[6]; return RAMP[7];
 }
-const fmt = n => n.toLocaleString();
+$("ramp").innerHTML = RAMP.map(c => `<div style="background:${c}"></div>`).join("");
+
+let filterFn = null;   // when set, only matching precincts are highlighted
+function precinctStyle(f) {
+  const on = !filterFn || filterFn(f.properties);
+  return { fillColor: marginColor(f.properties.m), fillOpacity: on ? 0.65 : 0.04, color: on ? "#334155" : "#94a3b8", weight: on ? 0.4 : 0.2, opacity: on ? 0.6 : 0.2 };
+}
 const precincts = L.geoJSON(null, {
-  style: f => ({ fillColor: marginColor(f.properties.m), fillOpacity: 0.6, color: "#555", weight: 0.3 }),
+  style: precinctStyle,
   onEachFeature: (f, layer) => {
-    const p = f.properties;
-    const lead = p.m < 0 ? `Trump +${Math.abs(p.m * 100).toFixed(1)}` : `Harris +${(p.m * 100).toFixed(1)}`;
-    layer.bindPopup(`<b>Precinct ${p.id}</b><br>
-      <b>${lead}</b><br>
-      Trump: ${fmt(p.r)} (${(p.r / p.t * 100).toFixed(1)}%)<br>
-      Harris: ${fmt(p.d)} (${(p.d / p.t * 100).toFixed(1)}%)<br>
-      Total votes: ${fmt(p.t)}
-      ${p.o ? "" : "<br><i>Boundary is estimated</i>"}`);
+    layer.on("mouseover", e => { showCard(f.properties); e.target.setStyle({ weight: 2.5, color: "#0f172a", opacity: 1 }); e.target.bringToFront(); });
+    layer.on("mouseout",  e => { hideCard(); precincts.resetStyle(e.target); });
+    layer.on("click",     () => showCard(f.properties, true));   // tap support on phones
   },
   attribution: 'Election data: <a href="https://github.com/nytimes/presidential-precinct-map-2024">The New York Times</a> (non-commercial use)'
 });
-let precinctsLoaded = false;
+let precinctData = null, loading = null;
 function loadPrecincts() {
-  if (precinctsLoaded) return;
-  precinctsLoaded = true;
-  coords.textContent = "Loading precincts…";
-  fetch("data/precincts-2024.geojson")
-    .then(r => r.json())
-    .then(data => { precincts.addData(data); coords.textContent = "Precincts loaded — click one for results"; })
-    .catch(() => { precinctsLoaded = false; coords.textContent = "Couldn't load precincts"; });
+  if (loading) return loading;
+  setStatus("Loading precincts…");
+  loading = fetch("data/precincts-2024.geojson").then(r => r.json()).then(d => {
+    precinctData = d; precincts.addData(d); setStatus(`${fmt(d.features.length)} precincts loaded`); return d;
+  }).catch(e => { loading = null; setStatus("Couldn't load precincts"); throw e; });
+  return loading;
 }
 
-const electionLegend = L.control({ position: "bottomright" });
-electionLegend.onAdd = () => {
-  const div = L.DomUtil.create("div", "legend");
-  const rows = [["#08306b","Harris +60 or more"],["#2171b5","Harris +40–60"],["#6baed6","Harris +20–40"],["#c6dbef","Harris +0–20"],
-                ["#fcbba1","Trump +0–20"],["#fb6a4a","Trump +20–40"],["#de2d26","Trump +40–60"],["#a50f15","Trump +60 or more"]];
-  div.innerHTML = "<b>2024 president</b><br>" + rows.map(([c,t]) => `<i style="background:${c}"></i>${t}`).join("<br>");
-  return div;
-};
+// ---------- Hover card ----------
+let cardTimer;
+function showCard(p, sticky) {
+  clearTimeout(cardTimer);
+  const oth = Math.max(0, p.t - p.r - p.d);
+  const pr = pct(p.r, p.t), pd = pct(p.d, p.t), po = pct(oth, p.t);
+  $("cWhere").textContent = `${p.c} County, ${p.s === "UT" ? "Utah" : "Wyoming"}`;
+  $("cName").textContent = `Precinct ${p.n}`;
+  const rep = p.m < 0, m = Math.abs(p.m * 100).toFixed(1);
+  $("cLead").textContent = `${rep ? "Trump" : "Harris"} +${m}`;
+  $("cLead").style.background = rep ? "#fee2e2" : "#dbeafe";
+  $("cLead").style.color = rep ? "#b91c1c" : "#1d4ed8";
+  $("bRep").style.width = pr + "%"; $("bOth").style.width = po + "%"; $("bDem").style.width = pd + "%";
+  $("vRep").textContent = fmt(p.r); $("pRep").textContent = pr.toFixed(1) + "%";
+  $("vDem").textContent = fmt(p.d); $("pDem").textContent = pd.toFixed(1) + "%";
+  $("vOth").textContent = fmt(oth); $("pOth").textContent = po.toFixed(1) + "%";
+  $("cTotal").textContent = `${fmt(p.t)} total votes`;
+  $("cBoundary").textContent = p.o ? "Official boundary" : "Estimated boundary";
+  $("card").classList.add("show");
+  if (sticky) cardTimer = setTimeout(hideCard, 6000);
+}
+function hideCard() { $("card").classList.remove("show"); }
 
-const overlays = {
-  "State outlines": stateLayer,
-  "Land ownership (public land)": landOwnership,
-  "2024 election by precinct": precincts
-};
-L.control.layers(baseMaps, overlays, { collapsed: false }).addTo(map);
-L.control.scale({ imperial: true, metric: false }).addTo(map);
+// ---------- Layer switches ----------
+const legends = { tElection: "lgElection", tLand: "lgLand" };
+function setLayer(id, on) {
+  $(id).checked = on;
+  const layer = { tElection: precincts, tLand: landOwnership, tStates: stateLayer }[id];
+  if (on) { layer.addTo(map); if (id === "tElection") loadPrecincts(); } else map.removeLayer(layer);
+  if (legends[id]) $(legends[id]).classList.toggle("show", on);
+}
+["tElection", "tLand", "tStates"].forEach(id => $(id).onchange = e => setLayer(id, e.target.checked));
+$("layersToggle").onclick = () => $("layers").classList.toggle("open");
 
-// ---------- Legend for land ownership ----------
-const legend = L.control({ position: "bottomright" });
-legend.onAdd = () => {
-  const div = L.DomUtil.create("div", "legend");
-  div.innerHTML = `<b>Land ownership</b><br>
-    <i style="background:#fee67a"></i>BLM<br>
-    <i style="background:#cde3a6"></i>Forest Service<br>
-    <i style="background:#cab3d6"></i>National Park<br>
-    <i style="background:#9dc8e4"></i>State<br>
-    <i style="background:#fbb4c9"></i>Tribal (BIA)<br>
-    <i style="background:#fff;border:1px solid #ccc"></i>Blank = mostly private`;
-  return div;
+// ---------- Search / filter box ----------
+// Reads plain-English requests and turns them into filters. Runs entirely in the browser.
+const COUNTIES = {
+  UT: "Beaver,Box Elder,Cache,Carbon,Daggett,Davis,Duchesne,Emery,Garfield,Grand,Iron,Juab,Kane,Millard,Morgan,Piute,Rich,Salt Lake,San Juan,Sanpete,Sevier,Summit,Tooele,Uintah,Utah,Wasatch,Washington,Wayne,Weber".split(","),
+  WY: "Albany,Big Horn,Campbell,Carbon,Converse,Crook,Fremont,Goshen,Hot Springs,Johnson,Laramie,Lincoln,Natrona,Niobrara,Park,Platte,Sheridan,Sublette,Sweetwater,Teton,Uinta,Washakie,Weston".split(",")
 };
-map.on("overlayadd", e => {
-  if (e.layer === landOwnership) legend.addTo(map);
-  if (e.layer === precincts) { loadPrecincts(); electionLegend.addTo(map); }
-});
-map.on("overlayremove", e => {
-  if (e.layer === landOwnership) legend.remove();
-  if (e.layer === precincts) electionLegend.remove();
-});
+const num = s => parseFloat(String(s).replace(/,/g, ""));
+
+function parseQuery(raw) {
+  const q = " " + raw.toLowerCase().replace(/[“”"]/g, "") + " ";
+  const tests = [], tags = [];
+  const add = (fn, tag) => { tests.push(fn); tags.push(tag); };
+
+  // Place search: "go to X", "zoom to X", "near X"
+  const go = q.match(/\b(?:go to|goto|take me to|zoom to|fly to|show me|near|find)\s+(.+?)\s*$/);
+  if (go && !/precinct|trump|harris|county|won|vote|%|competitive|close/.test(go[1])) return { place: go[1].trim() };
+
+  // State. "utah county" is a county, not the state.
+  const saysWY = /\b(wyoming|wy)\b/.test(q);
+  const saysUT = /\b(utah|ut)\b(?!\s+(county|co\b))/.test(q);
+  const state = saysWY && !saysUT ? "WY" : saysUT && !saysWY ? "UT" : null;
+  if (state) add(p => p.s === state, state === "UT" ? "Utah" : "Wyoming");
+
+  // County (Carbon exists in both states; Utah County needs the word "county")
+  const countyTests = [], countyTags = [];
+  for (const [st, list] of Object.entries(COUNTIES)) for (const c of list) {
+    const m = q.match(new RegExp("\\b" + c.toLowerCase() + "(\\s+county|\\s+co\\b)?\\b"));
+    if (!m) continue;
+    if (c === "Utah" && !m[1]) continue;
+    if (state && state !== st) continue;
+    countyTests.push(p => p.c === c && p.s === st);
+    countyTags.push(`${c} County${c === "Carbon" && !state ? ` (${st})` : ""}`);
+  }
+  if (countyTests.length) add(p => countyTests.some(t => t(p)), countyTags.join(" or "));
+
+  // Winner
+  if (/\b(trump|republicans?|gop|red)\s+(won|wins|win|carried|precincts?)\b|\bwon by trump\b/.test(q)) add(p => p.m < 0, "Trump won");
+  if (/\b(harris|democrats?|democratic|dems?|blue)\s+(won|wins|win|carried|precincts?)\b|\bwon by harris\b/.test(q)) add(p => p.m > 0, "Harris won");
+
+  // Candidate share: "trump over 80%", "harris at least 40 percent"
+  const share = /\b(trump|harris)\s+(?:is\s+|got\s+|with\s+)?(over|above|more than|greater than|at least|>=|>|under|below|less than|at most|<=|<)\s*(\d+(?:\.\d+)?)\s*(?:%|percent)?/g;
+  let s;
+  while ((s = share.exec(q))) {
+    const who = s[1], v = num(s[3]) / 100, key = who === "trump" ? "r" : "d";
+    const up = /over|above|more|greater|least|>/.test(s[2]);
+    add(p => { const x = p[key] / p.t; return up ? x >= v : x <= v; }, `${who[0].toUpperCase() + who.slice(1)} ${up ? "≥" : "≤"} ${s[3]}%`);
+  }
+
+  // Margin: "margin under 10", "within 5 points", or "competitive"
+  const mg = q.match(/\b(?:margin\s+(?:under|below|less than|within)|within)\s*(\d+(?:\.\d+)?)\s*(?:%|points?|pts)?/);
+  if (mg) { const v = num(mg[1]) / 100; add(p => Math.abs(p.m) <= v, `Margin ≤ ${mg[1]} pts`); }
+  else if (/\b(competitive|close|swing|tossup|toss-up|purple)\b/.test(q)) add(p => Math.abs(p.m) <= 0.1, "Margin ≤ 10 pts");
+
+  // Vote totals: "over 1000 votes", "rural"
+  const vt = q.match(/\b(over|above|more than|at least|under|below|less than|fewer than)\s*([\d,]+)\s*(?:total\s+)?votes?\b/);
+  if (vt) { const v = num(vt[2]), up = /over|above|more|least/.test(vt[1]); add(p => up ? p.t >= v : p.t <= v, `${up ? "≥" : "≤"} ${fmt(v)} votes`); }
+  else if (/\b(rural|remote|sparse|small)\b/.test(q)) add(p => p.t < 500, "Under 500 votes");
+
+  if (/\bestimated\b/.test(q)) add(p => !p.o, "Estimated boundary");
+
+  if (!tests.length) return { place: raw.replace(/^(go to|show me|zoom to|find)\s+/i, "").trim() };
+  return { fn: p => tests.every(t => t(p)), tags };
+}
+
+async function runQuery(raw) {
+  if (!raw.trim()) return;
+  const parsed = parseQuery(raw);
+  if (parsed.place) return goToPlace(parsed.place);
+
+  if (!map.hasLayer(precincts)) setLayer("tElection", true);
+  await loadPrecincts();
+  filterFn = parsed.fn;
+  precincts.setStyle(precinctStyle);
+
+  const hits = precinctData.features.filter(f => filterFn(f.properties));
+  if (!hits.length) return showResult(`No precincts match “${raw}”.`, parsed.tags);
+  let r = 0, d = 0, t = 0;
+  hits.forEach(f => { r += f.properties.r; d += f.properties.d; t += f.properties.t; });
+  showResult(`<b>${fmt(hits.length)}</b> precincts · ${fmt(t)} votes · Trump ${pct(r, t).toFixed(1)}% · Harris ${pct(d, t).toFixed(1)}%`, parsed.tags);
+  map.fitBounds(L.geoJSON({ type: "FeatureCollection", features: hits }).getBounds(), { padding: [60, 60], maxZoom: 12 });
+}
+
+async function goToPlace(place) {
+  showResult(`Looking up “${place}”…`, []);
+  try {
+    const url = "https://nominatim.openstreetmap.org/search?format=json&limit=1&countrycodes=us&viewbox=-114.1,45.1,-104,36.9&bounded=1&q=" + encodeURIComponent(place);
+    const res = await (await fetch(url)).json();
+    if (!res.length) return showResult(`Couldn't find “${place}” in Utah or Wyoming.`, []);
+    const b = res[0].boundingbox.map(Number);
+    map.fitBounds([[b[0], b[2]], [b[1], b[3]]], { maxZoom: 13 });
+    showResult(`📍 ${res[0].display_name.split(",").slice(0, 3).join(",")}`, []);
+  } catch { showResult("Place search isn't available right now.", []); }
+}
+
+function showResult(html, tags) {
+  $("resultText").innerHTML = html;
+  $("resultTags").innerHTML = tags.map(t => `<span class="tag">${t}</span>`).join("");
+  $("result").classList.add("show"); $("chips").style.display = "none";
+}
+function clearFilter() {
+  filterFn = null; precincts.setStyle(precinctStyle);
+  $("result").classList.remove("show"); $("chips").style.display = ""; $("askInput").value = "";
+}
+$("ask").onsubmit = e => { e.preventDefault(); runQuery($("askInput").value); };
+$("clearBtn").onclick = clearFilter;
+document.querySelectorAll(".chip").forEach(c => c.onclick = () => { $("askInput").value = c.textContent; runQuery(c.textContent); });
 
 // ---------- Coordinates readout ----------
-map.on("mousemove", e => {
-  coords.textContent = `${e.latlng.lat.toFixed(5)}, ${e.latlng.lng.toFixed(5)}`;
-});
+map.on("mousemove", e => setStatus(`${e.latlng.lat.toFixed(4)}, ${e.latlng.lng.toFixed(4)}`));
 </script>
 </body>
 </html>
