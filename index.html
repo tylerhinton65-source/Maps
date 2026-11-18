@@ -61,21 +61,24 @@ const baseMaps = {
 
 const map = L.map("map", { layers: [baseMaps["Topo"]], preferCanvas: true });
 
-// ---------- State outlines (simplified boundaries) ----------
+// ---------- State outlines ----------
+// Utah and Wyoming share the same corner points, so their common border is drawn once.
+const UT_WY_X = -111.0467;   // north–south line where Utah's NE notch meets Wyoming
 const states = {
   type: "FeatureCollection",
   features: [
     { type: "Feature", properties: { name: "Utah" }, geometry: { type: "Polygon", coordinates: [[
-      [-114.052, 37.000], [-109.045, 37.000], [-109.050, 41.000], [-111.047, 41.000],
-      [-111.047, 42.000], [-114.040, 42.000], [-114.052, 37.000]
+      [-114.0506, 37.0000], [-109.0452, 37.0000], [-109.0501, 41.0000], [UT_WY_X, 41.0000],
+      [UT_WY_X, 42.0016], [-114.0396, 42.0016], [-114.0506, 37.0000]
     ]]}},
     { type: "Feature", properties: { name: "Wyoming" }, geometry: { type: "Polygon", coordinates: [[
-      [-111.056, 41.000], [-104.053, 41.000], [-104.053, 45.000], [-111.056, 45.000], [-111.056, 41.000]
+      [UT_WY_X, 41.0000], [-109.0501, 41.0000], [-104.0530, 41.0016], [-104.0579, 44.9976],
+      [-111.0562, 44.9988], [-111.0446, 42.0016], [UT_WY_X, 42.0016], [UT_WY_X, 41.0000]
     ]]}}
   ]
 };
 const stateLayer = L.geoJSON(states, {
-  style: { color: "#d62828", weight: 3, fill: false, dashArray: "6 4" },
+  style: { color: "#d62828", weight: 2.5, opacity: 0.8, fill: false },
   onEachFeature: (f, layer) => layer.bindTooltip(f.properties.name, { sticky: true })
 }).addTo(map);
 map.fitBounds(stateLayer.getBounds(), { padding: [20, 20] });
