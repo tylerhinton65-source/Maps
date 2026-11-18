@@ -325,16 +325,26 @@ const short = n => n.split(" ").slice(-1)[0];
 let filterFn = null;
 function precinctStyle(f) {
   const on = !filterFn || filterFn(f.properties);
-  return { fillColor: marginColor(f.properties.m), fillOpacity: on ? 0.65 : 0.04, color: on ? "#334155" : "#94a3b8", weight: on ? 0.4 : 0.2, opacity: on ? 0.6 : 0.2 };
+  const fill = marginColor(f.properties.m);
+  // Zoomed out: outline each precinct in its own fill color so seams between neighbors are covered.
+  if (map.getZoom() < SEAM_ZOOM) return { fillColor: fill, fillOpacity: on ? 0.65 : 0.04, color: fill, weight: on ? 1.2 : 0.6, opacity: on ? 0.65 : 0.04 };
+  return { fillColor: fill, fillOpacity: on ? 0.65 : 0.04, color: on ? "#334155" : "#94a3b8", weight: on ? 0.4 : 0.2, opacity: on ? 0.6 : 0.2 };
 }
+const SEAM_ZOOM = 11;
 const precincts = L.geoJSON(null, {
   style: precinctStyle,
+  smoothFactor: 0.4, // less per-shape simplification = fewer cracks between neighbors (default 1)
   onEachFeature: (f, layer) => {
     layer.on("mouseover", e => { showCard(f.properties); placeCard(e.originalEvent); e.target.setStyle({ weight: 2.5, color: "#0f172a", opacity: 1 }); e.target.bringToFront(); });
     layer.on("mousemove", e => placeCard(e.originalEvent));
     layer.on("mouseout",  e => { hideCard(); precincts.resetStyle(e.target); });
     layer.on("click",     e => { showCard(f.properties, isTouch); placeCard(e.originalEvent); });
   }
+});
+let seamMode = null;
+map.on("zoomend", () => {
+  const m = map.getZoom() < SEAM_ZOOM;
+  if (m !== seamMode) { seamMode = m; if (map.hasLayer(precincts)) precincts.setStyle(precinctStyle); }
 });
 let precinctData = null, loading = null, shownAttr = null;
 const rawCache = {};
