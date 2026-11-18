@@ -47,6 +47,8 @@
   .btn-ghost { height: 36px; padding: 0 10px; border: 0; border-radius: 8px; background: transparent; color: var(--muted); font-size: 13px; }
   .btn-ghost:hover { background: #f1f5f9; color: var(--text); }
 
+  #menuBtn { display: none; }
+
   /* ---------- Layer rail ---------- */
   #rail { position: absolute; top: 16px; right: 16px; z-index: 1001; display: flex; flex-direction: column; gap: 6px; padding: 6px; background: var(--ink); border-radius: 14px; box-shadow: var(--shadow); }
   .rb { width: 44px; height: 44px; border: 0; border-radius: 10px; background: var(--ink-2); display: grid; place-items: center; position: relative; }
@@ -148,10 +150,17 @@
     #searchCol { flex: 1; }
     #ask { padding-left: 8px; }
     #ask .btn-red { height: 40px; padding: 0 14px; }
-    #result { margin-right: 58px; }
 
-    #rail { top: calc(68px + env(safe-area-inset-top)); right: calc(10px + env(safe-area-inset-right)); padding: 4px; gap: 4px; border-radius: 12px; }
-    .rb { width: 42px; height: 42px; }
+    /* Hamburger menu replaces the button column */
+    #menuBtn { display: grid; place-items: center; flex: none; width: 48px; height: 48px; border: 0; border-radius: 12px; background: var(--ink); color: white; box-shadow: var(--shadow); }
+    #menuBtn .mClose, #menuBtn.open .mOpen { display: none; }
+    #menuBtn.open .mClose { display: inline; }
+    #menuBtn.open { background: var(--ink-2); }
+    #rail { display: none; top: calc(66px + env(safe-area-inset-top)); right: calc(10px + env(safe-area-inset-right)); width: 230px; padding: 6px; gap: 4px; border-radius: 14px; z-index: 1002; }
+    #rail.open { display: flex; }
+    .rb { width: 100%; height: 48px; display: flex; align-items: center; gap: 12px; padding: 0 12px; }
+    .rb .tip, .rb:hover .tip { display: block; position: static; transform: none; padding: 0; background: none; color: #e2e8f0; font-size: 14px; font-weight: 600; }
+    .rb.on .tip { color: white; }
 
     /* Menus become bottom sheets */
     #basePanel, #racePanel, #totalsPanel {
@@ -202,6 +211,8 @@
       <button class="btn-ghost" id="clearBtn" type="button">Clear</button>
     </div>
   </div>
+
+  <button type="button" id="menuBtn" aria-label="Menu" aria-expanded="false" aria-controls="rail"><svg aria-hidden="true" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path class="mOpen" d="M4 7h16M4 12h16M4 17h16"/><path class="mClose" d="M6 6l12 12M18 6 6 18"/></svg></button>
 </div>
 
 <div id="rail">
@@ -712,12 +723,16 @@ $("ask").onsubmit = async e => {
 };
 $("clearBtn").onclick = () => clearFilter();
 
+// Phone hamburger menu
+function openMenu(open) { $("rail").classList.toggle("open", open); $("menuBtn").classList.toggle("open", open); $("menuBtn").setAttribute("aria-expanded", open); }
+$("menuBtn").onclick = () => openMenu(!$("rail").classList.contains("open"));
+document.querySelectorAll("#rail .rb").forEach(b => b.addEventListener("click", () => openMenu(false)));
 // Close menus when clicking the map
-map.on("click", () => { $("basePanel").classList.remove("open"); openRacePanel(false); if (phoneMQ.matches) openTotals(false); });
+map.on("click", () => { openMenu(false); $("basePanel").classList.remove("open"); openRacePanel(false); if (phoneMQ.matches) openTotals(false); });
 // Shorter search hint on small screens
 const phoneMQ = matchMedia("(max-width: 760px), (max-height: 500px)");
 const longHint = $("askInput").placeholder;
-const syncHint = () => { $("askInput").placeholder = phoneMQ.matches ? "Search a race, place or precinct…" : longHint; };
+const syncHint = () => { $("askInput").placeholder = phoneMQ.matches ? "Search a race or place…" : longHint; };
 phoneMQ.addEventListener("change", syncHint); syncHint();
 setLayer("rElection", true); // show results when the page opens
 map.on("mousemove", e => setStatus(`${e.latlng.lat.toFixed(4)}, ${e.latlng.lng.toFixed(4)}`));
