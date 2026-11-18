@@ -8,211 +8,218 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-<!-- Open connections to the map servers early so the first tiles arrive faster -->
 <link rel="preconnect" href="https://server.arcgisonline.com" crossorigin>
 <link rel="preconnect" href="https://gis.blm.gov" crossorigin>
 <link rel="preconnect" href="https://basemap.nationalmap.gov" crossorigin>
 <link rel="preconnect" href="https://a.tile.openstreetmap.org" crossorigin>
 <style>
   :root {
-    --panel: rgba(255,255,255,.88);
-    --border: rgba(15,23,42,.08);
-    --text: #0f172a;
-    --muted: #64748b;
-    --accent: #0f766e;
-    --accent-soft: #ccfbf1;
-    --rep: #dc2626;
-    --dem: #2563eb;
-    --other: #a3a3a3;
-    --shadow: 0 8px 30px rgba(15,23,42,.12), 0 1px 3px rgba(15,23,42,.08);
-    --radius: 16px;
+    --ink: #0f172a; --ink-2: #1e293b; --ink-3: #334155;
+    --red: #dc2626; --red-dark: #b91c1c; --red-soft: #fef2f2;
+    --text: #0f172a; --muted: #64748b; --line: #e2e8f0;
+    --rep: #dc2626; --dem: #2563eb; --other: #a3a3a3;
+    --shadow: 0 10px 30px rgba(15,23,42,.25);
   }
   * { box-sizing: border-box; }
   html, body { margin: 0; height: 100%; font-family: Inter, system-ui, sans-serif; color: var(--text); }
   #map { position: absolute; inset: 0; background: #e5e7eb; }
+  button { font: inherit; cursor: pointer; }
 
-  .glass {
-    background: var(--panel);
-    backdrop-filter: blur(14px) saturate(160%);
-    -webkit-backdrop-filter: blur(14px) saturate(160%);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    box-shadow: var(--shadow);
-  }
-
-  /* ---------- Top bar ---------- */
-  #topbar {
-    position: absolute; top: 14px; left: 14px; right: 14px; z-index: 1000;
-    display: flex; gap: 12px; align-items: flex-start; pointer-events: none;
-  }
-  #topbar > * { pointer-events: auto; }
-  .brand { display: flex; align-items: center; gap: 10px; padding: 10px 16px 10px 12px; white-space: nowrap; }
-  .brand .logo {
-    width: 34px; height: 34px; border-radius: 10px; display: grid; place-items: center;
-    background: linear-gradient(135deg, #14b8a6, #0f766e); color: white;
-  }
-  .brand h1 { font-size: 15px; margin: 0; font-weight: 700; letter-spacing: -.01em; }
-  .brand p { font-size: 12px; margin: 0; color: var(--muted); }
-
-  /* ---------- Search / AI box ---------- */
-  #askWrap { flex: 1; max-width: 640px; margin: 0 auto; }
-  #ask { display: flex; align-items: center; gap: 8px; padding: 6px 6px 6px 14px; }
-  #ask .spark { color: var(--accent); flex: none; }
-  #askInput {
-    flex: 1; border: 0; outline: 0; background: transparent; font: inherit; font-size: 14px;
-    padding: 8px 0; color: var(--text); min-width: 0;
-  }
+  /* ---------- Brand + search ---------- */
+  #top { position: absolute; top: 16px; left: 16px; right: 84px; z-index: 1000; display: flex; gap: 10px; align-items: flex-start; pointer-events: none; }
+  #top > * { pointer-events: auto; }
+  .brand { display: flex; align-items: center; gap: 10px; height: 56px; padding: 0 16px 0 10px; background: var(--ink); border-radius: 14px; box-shadow: var(--shadow); color: white; white-space: nowrap; }
+  .brand .logo { width: 36px; height: 36px; border-radius: 10px; background: var(--red); display: grid; place-items: center; }
+  .brand b { font-size: 15px; }
+  #searchCol { flex: 1; max-width: 720px; position: relative; }
+  #ask { display: flex; align-items: center; gap: 8px; height: 56px; padding: 0 6px; background: var(--ink); border-radius: 14px; box-shadow: var(--shadow); }
+  #filterBtn { display: flex; align-items: center; gap: 7px; height: 44px; padding: 0 12px; border: 0; border-radius: 10px; background: var(--ink-2); color: #e2e8f0; font-size: 14px; font-weight: 600; flex: none; }
+  #filterBtn:hover, #filterBtn.open { background: var(--ink-3); color: white; }
+  #filterCount { display: none; min-width: 20px; height: 20px; padding: 0 6px; border-radius: 10px; background: var(--red); color: white; font-size: 12px; font-weight: 700; align-items: center; justify-content: center; }
+  #filterCount.show { display: inline-flex; }
+  #ask .spark { color: #f87171; flex: none; margin-left: 4px; }
+  #askInput { flex: 1; min-width: 0; height: 44px; border: 0; outline: 0; background: transparent; color: white; font: inherit; font-size: 14px; }
   #askInput::placeholder { color: #94a3b8; }
-  .btn {
-    border: 0; border-radius: 10px; padding: 8px 14px; font: inherit; font-size: 13px; font-weight: 600;
-    cursor: pointer; background: var(--accent); color: white; transition: background .15s;
-  }
-  .btn:hover { background: #115e59; }
-  .btn.ghost { background: transparent; color: var(--muted); padding: 8px 10px; }
-  .btn.ghost:hover { background: rgba(15,23,42,.06); color: var(--text); }
-  #chips { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; justify-content: center; }
-  .chip {
-    font-size: 12px; padding: 5px 10px; border-radius: 999px; cursor: pointer; border: 1px solid var(--border);
-    background: rgba(255,255,255,.8); color: #334155; backdrop-filter: blur(8px); transition: all .15s;
-  }
-  .chip:hover { border-color: var(--accent); color: var(--accent); }
-  #result {
-    display: none; margin-top: 8px; padding: 10px 12px 10px 14px; font-size: 13px;
-    align-items: center; gap: 10px;
-  }
+  .btn-red { height: 44px; padding: 0 18px; border: 0; border-radius: 10px; background: var(--red); color: white; font-size: 14px; font-weight: 700; flex: none; }
+  .btn-red:hover { background: var(--red-dark); }
+
+  #result { display: none; margin-top: 8px; padding: 10px 10px 10px 14px; background: white; border-radius: 12px; box-shadow: var(--shadow); font-size: 13px; align-items: center; gap: 10px; }
   #result.show { display: flex; }
   #result .txt { flex: 1; line-height: 1.45; }
-  #result .tags { display: flex; gap: 4px; flex-wrap: wrap; margin-top: 4px; }
-  #result .tag { background: var(--accent-soft); color: var(--accent); font-size: 11px; font-weight: 600; padding: 2px 8px; border-radius: 999px; }
+  .tags { display: flex; gap: 4px; flex-wrap: wrap; margin-top: 4px; }
+  .tag { background: var(--red-soft); color: var(--red-dark); font-size: 11px; font-weight: 600; padding: 2px 8px; border-radius: 999px; }
+  .btn-ghost { height: 36px; padding: 0 10px; border: 0; border-radius: 8px; background: transparent; color: var(--muted); font-size: 13px; }
+  .btn-ghost:hover { background: #f1f5f9; color: var(--text); }
 
-  /* ---------- Layers panel ---------- */
-  #layers { width: 250px; padding: 14px; flex: none; }
-  #layers h3 { font-size: 11px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); margin: 0 0 8px; font-weight: 600; }
-  .seg { display: grid; grid-template-columns: repeat(4, 1fr); background: rgba(15,23,42,.06); border-radius: 10px; padding: 3px; gap: 2px; margin-bottom: 14px; }
-  .seg button { border: 0; background: transparent; font: inherit; font-size: 12px; padding: 6px 0; border-radius: 8px; cursor: pointer; color: #475569; }
-  .seg button.on { background: white; color: var(--text); font-weight: 600; box-shadow: 0 1px 3px rgba(0,0,0,.1); }
-  .toggle { display: flex; align-items: center; justify-content: space-between; padding: 8px 0; font-size: 13px; border-top: 1px solid var(--border); }
-  .toggle:first-of-type { border-top: 0; }
-  .switch { position: relative; width: 34px; height: 20px; flex: none; }
-  .switch input { display: none; }
-  .switch span { position: absolute; inset: 0; background: #cbd5e1; border-radius: 999px; transition: .2s; cursor: pointer; }
-  .switch span::after { content: ""; position: absolute; width: 16px; height: 16px; left: 2px; top: 2px; background: white; border-radius: 50%; transition: .2s; box-shadow: 0 1px 2px rgba(0,0,0,.2); }
-  .switch input:checked + span { background: var(--accent); }
-  .switch input:checked + span::after { transform: translateX(14px); }
-  .legend { margin: 2px 0 6px; display: none; }
+  /* ---------- Filters dropdown ---------- */
+  #filters { display: none; position: absolute; top: 64px; left: 0; width: 600px; max-width: calc(100vw - 32px); background: white; border-radius: 16px; box-shadow: 0 18px 44px rgba(15,23,42,.28); overflow: hidden; }
+  #filters.open { display: flex; }
+  #cats { width: 190px; flex: none; background: #f8fafc; border-right: 1px solid var(--line); padding: 8px; display: flex; flex-direction: column; gap: 2px; }
+  .cat { display: flex; align-items: center; gap: 10px; height: 42px; padding: 0 10px; border: 0; border-radius: 10px; background: transparent; color: var(--text); font-size: 14px; text-align: left; }
+  .cat:hover { background: #eef2f7; }
+  .cat.on { background: var(--ink); color: white; font-weight: 600; }
+  .cat .ic { width: 24px; height: 24px; border-radius: 7px; display: grid; place-items: center; flex: none; }
+  .cat .soon { margin-left: auto; font-size: 10px; color: #94a3b8; font-weight: 600; text-transform: uppercase; letter-spacing: .04em; }
+  #pane { flex: 1; padding: 18px 20px; display: flex; flex-direction: column; gap: 16px; min-height: 380px; }
+  #pane h4 { margin: 0; font-size: 16px; }
+  #pane .sub { font-size: 13px; color: var(--muted); margin-top: 2px; }
+  .field { display: flex; flex-direction: column; gap: 6px; }
+  .field > span { font-size: 11px; font-weight: 700; color: var(--ink-3); text-transform: uppercase; letter-spacing: .06em; }
+  .seg { display: inline-flex; background: #f1f5f9; border-radius: 10px; padding: 3px; gap: 2px; }
+  .seg button { height: 32px; padding: 0 12px; border: 0; border-radius: 8px; background: transparent; color: #475569; font-size: 13px; }
+  .seg button.on { background: white; color: var(--text); font-weight: 600; box-shadow: 0 1px 3px rgba(0,0,0,.12); }
+  .row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; font-size: 13px; color: #475569; }
+  .row input, .row select, .field select { height: 38px; padding: 0 10px; border: 1px solid #cbd5e1; border-radius: 9px; font: inherit; font-size: 14px; color: var(--text); background: white; }
+  .row input { width: 84px; }
+  .check { display: flex; align-items: center; justify-content: space-between; padding: 10px 12px; background: #f8fafc; border-radius: 10px; font-size: 14px; }
+  .check input { width: 18px; height: 18px; accent-color: var(--red); }
+  .paneFoot { margin-top: auto; display: flex; justify-content: space-between; align-items: center; }
+  .soonBox { padding: 16px; border: 2px dashed #cbd5e1; border-radius: 12px; color: var(--muted); font-size: 13px; line-height: 1.5; }
+
+  /* ---------- Layer rail ---------- */
+  #rail { position: absolute; top: 16px; right: 16px; z-index: 1001; display: flex; flex-direction: column; gap: 6px; padding: 6px; background: var(--ink); border-radius: 14px; box-shadow: var(--shadow); }
+  .rb { width: 44px; height: 44px; border: 0; border-radius: 10px; background: var(--ink-2); display: grid; place-items: center; position: relative; }
+  .rb:hover { background: var(--ink-3); }
+  .rb.on { background: var(--c, var(--red)); color: white !important; }
+  .rb .tip { display: none; position: absolute; right: 54px; top: 50%; transform: translateY(-50%); background: var(--ink); color: white; font-size: 12px; font-weight: 600; padding: 6px 10px; border-radius: 8px; white-space: nowrap; pointer-events: none; }
+  .rb:hover .tip { display: block; }
+  #basePanel { display: none; position: absolute; top: 16px; right: 80px; z-index: 1001; width: 210px; background: white; border-radius: 14px; box-shadow: var(--shadow); padding: 12px; flex-direction: column; gap: 6px; }
+  #basePanel.open { display: flex; }
+  #basePanel h5 { margin: 0 0 4px; font-size: 11px; font-weight: 700; color: var(--red-dark); text-transform: uppercase; letter-spacing: .06em; }
+  .baseOpt { height: 40px; padding: 0 12px; border: 1px solid var(--line); border-radius: 10px; background: white; color: var(--ink-3); font-size: 13px; text-align: left; }
+  .baseOpt.on { border: 2px solid var(--red); background: var(--red-soft); color: #7f1d1d; font-weight: 700; }
+
+  /* ---------- Legends ---------- */
+  #legends { position: absolute; right: 16px; bottom: 112px; z-index: 1000; display: flex; flex-direction: column; gap: 8px; align-items: flex-end; }
+  .legend { display: none; background: white; border-radius: 12px; box-shadow: var(--shadow); padding: 10px 12px; font-size: 11px; color: #475569; width: 220px; }
   .legend.show { display: block; }
+  .legend b { display: block; font-size: 12px; color: var(--text); margin-bottom: 6px; }
   .ramp { display: flex; height: 8px; border-radius: 4px; overflow: hidden; }
   .ramp div { flex: 1; }
-  .ramp-labels { display: flex; justify-content: space-between; font-size: 11px; color: var(--muted); margin-top: 4px; }
-  .keys { display: grid; grid-template-columns: 1fr 1fr; gap: 4px 8px; font-size: 11px; color: #475569; }
+  .ramp-labels { display: flex; justify-content: space-between; margin-top: 4px; }
+  .keys { display: grid; grid-template-columns: 1fr 1fr; gap: 4px 8px; }
   .keys i { display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-right: 5px; vertical-align: -1px; }
-  #layersToggle { display: none; }
 
   /* ---------- Hover card ---------- */
-  #card {
-    position: absolute; left: 14px; bottom: 30px; z-index: 1000; width: 300px; padding: 16px;
-    opacity: 0; transform: translateY(8px); transition: opacity .15s, transform .15s; pointer-events: none;
-  }
-  #card.show { opacity: 1; transform: none; }
-  #card.follow { bottom: auto; transition: opacity .12s; transform: none; }
-  #card.phone { left: 50% !important; right: auto; bottom: 30px; top: auto !important; transform: translateX(-50%); width: min(340px, calc(100vw - 28px)); }
+  #card { position: absolute; left: 14px; bottom: 30px; z-index: 1002; width: 300px; padding: 16px; background: white; border-radius: 16px; box-shadow: 0 14px 40px rgba(15,23,42,.28); opacity: 0; transition: opacity .12s; pointer-events: none; }
+  #card.show { opacity: 1; }
+  #card.follow { bottom: auto; }
+  #card.phone { left: 50% !important; top: auto !important; bottom: 30px; transform: translateX(-50%); width: min(340px, calc(100vw - 28px)); }
   #card .where { font-size: 11px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); font-weight: 600; }
-  #card .name { font-size: 16px; font-weight: 700; margin: 2px 0 10px; letter-spacing: -.01em; }
+  #card .name { font-size: 16px; font-weight: 700; margin: 2px 0 10px; }
   #card .lead { display: inline-block; font-size: 13px; font-weight: 700; padding: 3px 10px; border-radius: 999px; margin-bottom: 12px; }
   .bar { display: flex; height: 12px; border-radius: 6px; overflow: hidden; background: #f1f5f9; margin-bottom: 12px; }
-  .bar div { height: 100%; transition: width .25s ease; }
+  .bar div { height: 100%; }
   .cand { display: grid; grid-template-columns: 12px 1fr auto auto; gap: 8px; align-items: center; font-size: 13px; padding: 4px 0; }
   .cand .dot { width: 10px; height: 10px; border-radius: 3px; }
   .cand .pct { font-weight: 700; width: 52px; text-align: right; font-variant-numeric: tabular-nums; }
   .cand .votes { color: var(--muted); font-variant-numeric: tabular-nums; }
-  #card .foot { display: flex; justify-content: space-between; font-size: 12px; color: var(--muted); margin-top: 8px; padding-top: 10px; border-top: 1px solid var(--border); }
+  #card .foot { display: flex; justify-content: space-between; font-size: 12px; color: var(--muted); margin-top: 8px; padding-top: 10px; border-top: 1px solid var(--line); }
 
-  #status {
-    position: absolute; bottom: 30px; right: 64px; z-index: 1000; font-size: 12px; padding: 6px 10px;
-    border-radius: 10px; color: #475569; font-variant-numeric: tabular-nums;
-  }
-  .leaflet-control-attribution { font-size: 10px; background: rgba(255,255,255,.7) !important; }
+  #status { position: absolute; bottom: 24px; left: 120px; z-index: 1000; font-size: 12px; padding: 5px 10px; border-radius: 8px; background: rgba(15,23,42,.8); color: #e2e8f0; font-variant-numeric: tabular-nums; }
+  .leaflet-control-attribution { font-size: 10px; background: rgba(255,255,255,.75) !important; }
   .leaflet-control-zoom { border: 0 !important; box-shadow: var(--shadow) !important; border-radius: 12px !important; overflow: hidden; }
-  .leaflet-control-zoom a { width: 36px !important; height: 36px !important; line-height: 36px !important; }
-  .leaflet-bottom.leaflet-left .leaflet-control-scale { margin-left: 330px; }
+  .leaflet-control-zoom a { width: 40px !important; height: 40px !important; line-height: 40px !important; background: var(--ink) !important; color: white !important; border-color: var(--ink-3) !important; }
 
-  @media (max-width: 820px) {
-    #topbar { flex-wrap: wrap; }
-    .brand p { display: none; }
-    #askWrap { order: 3; flex-basis: 100%; }
-    #layers { position: absolute; right: 0; top: 56px; display: none; }
-    #layers.open { display: block; }
-    #layersToggle { display: block; margin-left: auto; }
+  @media (max-width: 760px) {
+    #top { flex-wrap: wrap; right: 76px; }
+    .brand b { display: none; }
+    .brand { padding: 0 10px; }
+    #searchCol { flex-basis: 100%; order: 2; }
+    #askInput::placeholder { color: transparent; }
+    #filters { flex-direction: column; }
+    #cats { width: auto; flex-direction: row; overflow-x: auto; border-right: 0; border-bottom: 1px solid var(--line); }
+    .cat { flex: none; }
+    .cat .soon { display: none; }
+    #pane { min-height: 0; }
     #status { display: none; }
-    .leaflet-bottom.leaflet-left .leaflet-control-scale { margin-left: 10px; }
+    #legends { bottom: 120px; }
   }
 </style>
 </head>
 <body>
 <div id="map"></div>
 
-<div id="topbar">
-  <div class="brand glass">
-    <div class="logo">
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 20 6-12 4 7 3-4 5 9z"/></svg>
-    </div>
-    <div><h1>Land Finder</h1><p>Utah &amp; Wyoming</p></div>
+<div id="top">
+  <div class="brand">
+    <div class="logo"><svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 20 6-12 4 7 3-4 5 9z"/></svg></div>
+    <b>Land Finder</b>
   </div>
 
-  <div id="askWrap">
-    <form id="ask" class="glass" autocomplete="off">
-      <svg class="spark" width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l1.9 5.6L19.5 9.5l-5.6 1.9L12 17l-1.9-5.6L4.5 9.5l5.6-1.9zM19 14l.9 2.6 2.6.9-2.6.9L19 21l-.9-2.6-2.6-.9 2.6-.9z"/></svg>
-      <input id="askInput" placeholder="Try “Trump over 80% in Wyoming” or “go to Moab”">
-      <button type="submit" class="btn">Search</button>
+  <div id="searchCol">
+    <form id="ask" autocomplete="off">
+      <button type="button" id="filterBtn" aria-expanded="false" aria-controls="filters">
+        <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M4 6h16M7 12h10M10 18h4"/></svg>
+        Filters <span id="filterCount">0</span>
+      </button>
+      <svg class="spark" aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l1.9 5.6L19.5 9.5l-5.6 1.9L12 17l-1.9-5.6L4.5 9.5l5.6-1.9z"/></svg>
+      <label for="askInput" style="position:absolute;left:-9999px">Search or ask</label>
+      <input id="askInput" placeholder="Ask: “Trump over 80% in Wyoming” or “go to Moab”">
+      <button type="submit" class="btn-red">Search</button>
     </form>
-    <div id="chips">
-      <span class="chip">Competitive precincts</span>
-      <span class="chip">Harris won in Utah</span>
-      <span class="chip">Trump over 85%</span>
-      <span class="chip">Teton County</span>
-      <span class="chip">Go to Cody, WY</span>
-    </div>
-    <div id="result" class="glass">
-      <div class="txt"><div id="resultText"></div><div class="tags" id="resultTags"></div></div>
-      <button class="btn ghost" id="clearBtn" type="button">Clear</button>
-    </div>
-  </div>
 
-  <button id="layersToggle" class="btn glass" style="color:var(--text);background:var(--panel)">Layers</button>
+    <div id="filters" role="dialog" aria-label="Filters">
+      <div id="cats">
+        <button class="cat on" data-cat="election"><span class="ic" style="background:#fee2e2;color:#b91c1c"><svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M5 20V10M12 20V4M19 20v-7"/></svg></span>Election</button>
+        <button class="cat" data-cat="land"><span class="ic" style="background:#dcfce7;color:#15803d"><svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linejoin="round"><path d="M4 20V8l8-4 8 4v12z"/></svg></span>Land<span class="soon">Soon</span></button>
+        <button class="cat" data-cat="water"><span class="ic" style="background:#dbeafe;color:#1d4ed8"><svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 3s6 7 6 11a6 6 0 0 1-12 0c0-4 6-11 6-11z"/></svg></span>Water<span class="soon">Soon</span></button>
+        <button class="cat" data-cat="access"><span class="ic" style="background:#ede9fe;color:#6d28d9"><svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M4 19 19 4M8 19h11V8"/></svg></span>Access<span class="soon">Soon</span></button>
+        <button class="cat" data-cat="terrain"><span class="ic" style="background:#fef3c7;color:#b45309"><svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m3 20 6-12 4 7 3-4 5 9z"/></svg></span>Terrain<span class="soon">Soon</span></button>
+        <button class="cat" data-cat="hazards"><span class="ic" style="background:#ffedd5;color:#c2410c"><svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 3 2 20h20zM12 10v4"/></svg></span>Hazards<span class="soon">Soon</span></button>
+        <button class="cat" data-cat="utilities"><span class="ic" style="background:#f3e8ff;color:#7e22ce"><svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 4 14h7l-1 8 9-12h-7z"/></svg></span>Utilities<span class="soon">Soon</span></button>
+      </div>
 
-  <div id="layers" class="glass">
-    <h3>Base map</h3>
-    <div class="seg" id="baseSeg">
-      <button data-base="Topo" class="on">Topo</button>
-      <button data-base="Satellite">Satellite</button>
-      <button data-base="Streets">Streets</button>
-      <button data-base="USGS" title="USGS topo: more detail, slower">USGS</button>
-    </div>
-    <h3>Overlays</h3>
-    <label class="toggle">Election 2024 by precinct
-      <span class="switch"><input type="checkbox" id="tElection"><span></span></span></label>
-    <div class="legend" id="lgElection">
-      <div class="ramp" id="ramp"></div>
-      <div class="ramp-labels"><span>Trump +60</span><span>Even</span><span>Harris +60</span></div>
-    </div>
-    <label class="toggle">Land ownership
-      <span class="switch"><input type="checkbox" id="tLand"><span></span></span></label>
-    <div class="legend" id="lgLand">
-      <div class="keys">
-        <span><i style="background:#fee67a"></i>BLM</span>
-        <span><i style="background:#cde3a6"></i>Forest Service</span>
-        <span><i style="background:#cab3d6"></i>National Park</span>
-        <span><i style="background:#9dc8e4"></i>State</span>
-        <span><i style="background:#fbb4c9"></i>Tribal</span>
-        <span><i style="background:#fff;border:1px solid #cbd5e1"></i>Mostly private</span>
+      <div id="pane">
+        <div data-pane="election" style="display:flex;flex-direction:column;gap:16px;flex:1">
+          <div><h4>Election 2024</h4><div class="sub">Filter precincts by how they voted for president</div></div>
+          <div class="field"><span>State</span>
+            <div class="seg" id="fState"><button type="button" data-v="" class="on">Both</button><button type="button" data-v="UT">Utah</button><button type="button" data-v="WY">Wyoming</button></div></div>
+          <div class="field"><span>County</span><select id="fCounty" aria-label="County"><option value="">Any county</option></select></div>
+          <div class="field"><span>Winner</span>
+            <div class="seg" id="fWinner"><button type="button" data-v="" class="on">Either</button><button type="button" data-v="r">Trump</button><button type="button" data-v="d">Harris</button></div></div>
+          <div class="field"><span>Trump vote share</span>
+            <div class="row"><label>at least <input id="fMin" type="number" min="0" max="100" placeholder="0"></label><label>at most <input id="fMax" type="number" min="0" max="100" placeholder="100"></label>%</div></div>
+          <label class="check">Competitive only (within 10 points)<input type="checkbox" id="fClose"></label>
+          <div class="paneFoot"><button type="button" class="btn-ghost" id="fReset">Reset</button><button type="button" class="btn-red" id="fApply">Show precincts</button></div>
+        </div>
+        <div data-pane="soon" style="display:none;flex-direction:column;gap:12px">
+          <div><h4 id="soonTitle"></h4><div class="sub">Filters for this category arrive once its data is on the map.</div></div>
+          <div class="soonBox" id="soonText"></div>
+        </div>
       </div>
     </div>
-    <label class="toggle">State outlines
-      <span class="switch"><input type="checkbox" id="tStates" checked><span></span></span></label>
+
+    <div id="result">
+      <div class="txt"><div id="resultText"></div><div class="tags" id="resultTags"></div></div>
+      <button class="btn-ghost" id="clearBtn" type="button">Clear</button>
+    </div>
   </div>
 </div>
 
-<div id="card" class="glass">
+<div id="rail">
+  <button class="rb on" id="rBase" style="--c:#dc2626;color:#fff" aria-label="Base map" aria-expanded="false"><svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="m12 3 9 5-9 5-9-5zM3 13l9 5 9-5"/></svg><span class="tip">Base map</span></button>
+  <button class="rb" id="rElection" style="--c:#dc2626;color:#f87171" aria-label="Election 2024" aria-pressed="false"><svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M5 20V10M12 20V4M19 20v-7"/></svg><span class="tip">Election 2024</span></button>
+  <button class="rb" id="rLand" style="--c:#16a34a;color:#4ade80" aria-label="Land ownership" aria-pressed="false"><svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M4 20V8l8-4 8 4v12z"/></svg><span class="tip">Land ownership</span></button>
+  <button class="rb on" id="rStates" style="--c:#475569;color:#cbd5e1" aria-label="State outlines" aria-pressed="true"><svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-dasharray="3 2.5"><rect x="4" y="4" width="16" height="16" rx="2"/></svg><span class="tip">State outlines</span></button>
+</div>
+
+<div id="basePanel">
+  <h5>Base map</h5>
+  <button class="baseOpt on" data-base="Topo">Topo</button>
+  <button class="baseOpt" data-base="Satellite">Satellite</button>
+  <button class="baseOpt" data-base="Streets">Streets</button>
+  <button class="baseOpt" data-base="USGS">USGS topo (detailed)</button>
+</div>
+
+<div id="legends">
+  <div class="legend" id="lgElection"><b>2024 president</b><div class="ramp" id="ramp"></div><div class="ramp-labels"><span>Trump +60</span><span>Even</span><span>Harris +60</span></div></div>
+  <div class="legend" id="lgLand"><b>Land ownership</b><div class="keys">
+    <span><i style="background:#fee67a"></i>BLM</span><span><i style="background:#cde3a6"></i>Forest Service</span>
+    <span><i style="background:#cab3d6"></i>National Park</span><span><i style="background:#9dc8e4"></i>State</span>
+    <span><i style="background:#fbb4c9"></i>Tribal</span><span><i style="background:#fff;border:1px solid #cbd5e1"></i>Mostly private</span></div></div>
+</div>
+
+<div id="card">
   <div class="where" id="cWhere"></div>
   <div class="name" id="cName"></div>
   <div class="lead" id="cLead"></div>
@@ -223,7 +230,7 @@
   <div class="foot"><span id="cTotal"></span><span id="cBoundary"></span></div>
 </div>
 
-<div id="status" class="glass">Ready</div>
+<div id="status">Ready</div>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
@@ -232,10 +239,8 @@ const setStatus = t => { $("status").textContent = t; };
 const fmt = n => n.toLocaleString();
 const pct = (a, b) => b ? (a / b * 100) : 0;
 
-// ---------- Speed settings shared by every layer ----------
-const fast = { updateWhenZooming: false, keepBuffer: 6 };
-
 // ---------- Base maps ----------
+const fast = { updateWhenZooming: false, keepBuffer: 6 };
 const baseMaps = {
   Topo: L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}", { ...fast, maxZoom: 19, attribution: "Topo &copy; Esri, USGS" }),
   Satellite: L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}", { ...fast, maxZoom: 19, attribution: "Imagery &copy; Esri" }),
@@ -247,10 +252,15 @@ L.control.zoom({ position: "bottomright" }).addTo(map);
 L.control.scale({ imperial: true, metric: false, position: "bottomleft" }).addTo(map);
 
 let currentBase = baseMaps.Topo;
-document.querySelectorAll("#baseSeg button").forEach(b => b.onclick = () => {
-  document.querySelectorAll("#baseSeg button").forEach(x => x.classList.toggle("on", x === b));
+document.querySelectorAll(".baseOpt").forEach(b => b.onclick = () => {
+  document.querySelectorAll(".baseOpt").forEach(x => x.classList.toggle("on", x === b));
   map.removeLayer(currentBase); currentBase = baseMaps[b.dataset.base]; currentBase.addTo(map); currentBase.bringToBack();
+  $("basePanel").classList.remove("open"); $("rBase").setAttribute("aria-expanded", "false");
 });
+$("rBase").onclick = () => {
+  const open = $("basePanel").classList.toggle("open");
+  $("rBase").setAttribute("aria-expanded", open);
+};
 
 // ---------- State outlines (official Census boundaries) ----------
 const states = {"type":"FeatureCollection","features":[{"type":"Feature","properties":{"name":"Utah"},"geometry":{"type":"MultiPolygon","coordinates":[[[[-112.97926,41.99843],[-112.84359,41.99936],[-112.83673,41.99903],[-112.83249,41.99939],[-112.80707,41.99956],[-112.7917,41.99954],[-112.79091,41.99917],[-112.78949,41.99957],[-112.78279,41.99972],[-112.72917,42.00012],[-112.38402,42.0012],[-112.287,42.00102],[-112.22086,42.00125],[-112.19298,42.00117],[-112.17335,41.99657],[-112.10953,41.9976],[-112.01218,41.99835],[-111.85703,41.99856],[-111.75076,41.99933],[-111.62612,41.99924],[-111.59718,41.99954],[-111.59622,41.99922],[-111.49093,41.99952],[-111.43049,42.00061],[-111.42559,42.00129],[-111.42101,42.00112],[-111.41902,42.00074],[-111.40791,42.00063],[-111.31103,42.00122],[-111.04669,42.00157],[-111.04579,41.56521],[-111.04618,41.39883],[-111.0466,41.36602],[-111.0469,41.11944],[-111.04672,40.99796],[-110.75092,40.99685],[-110.71502,40.99635],[-110.53982,40.99635],[-110.50072,40.99475],[-110.44908,40.99483],[-110.44339,40.99461],[-110.43631,40.99485],[-110.37571,40.99495],[-110.36047,40.99535],[-110.28493,40.99559],[-110.25432,40.99607],[-110.2379,40.99543],[-110.1947,40.99572],[-110.12571,40.99655],[-110.12164,40.9971],[-110.02209,40.99777],[-110.0065,40.99782],[-110.00033,40.99734],[-109.97553,40.99791],[-109.87113,40.99754],[-109.75071,40.998],[-109.74856,40.99779],[-109.658,40.99849],[-109.54322,40.9984],[-109.53493,40.99814],[-109.50069,40.99913],[-109.25074,41.00101],[-109.23198,41.00206],[-109.17368,41.00086],[-109.05008,41.00066],[-109.04907,40.87296],[-109.04874,40.86458],[-109.04884,40.83782],[-109.04846,40.82608],[-109.04909,40.7145],[-109.04899,40.68445],[-109.04826,40.65532],[-109.04804,40.61924],[-109.04881,40.5782],[-109.05007,40.54044],[-109.05012,40.51958],[-109.0507,40.49996],[-109.05031,40.49509],[-109.05095,40.44437],[-109.05098,39.99997],[-109.05061,39.87506],[-109.05141,39.49997],[-109.05076,39.36668],[-109.05152,39.12498],[-109.05244,38.99999],[-109.05389,38.91509],[-109.05419,38.87498],[-109.05739,38.79529],[-109.05954,38.71999],[-109.06025,38.59933],[-109.05996,38.49999],[-109.06026,38.49325],[-109.06006,38.27549],[-109.05555,38.251],[-109.04176,38.16469],[-109.04206,38.15549],[-109.04167,38.15302],[-109.04207,38.15302],[-109.04287,37.97492],[-109.04313,37.97465],[-109.04106,37.90724],[-109.04162,37.87516],[-109.04189,37.87398],[-109.04201,37.84207],[-109.04146,37.80011],[-109.04209,37.74987],[-109.04164,37.74021],[-109.04227,37.66613],[-109.04179,37.60965],[-109.04181,37.54669],[-109.04187,37.53058],[-109.0435,37.48428],[-109.04406,37.48081],[-109.04362,37.47833],[-109.04581,37.37499],[-109.04604,37.24999],[-109.04558,37.24935],[-109.04549,37.21084],[-109.04598,37.20183],[-109.046,37.17728],[-109.045,37.08643],[-109.04552,37.0],[-109.04522,36.99908],[-109.12569,36.99939],[-109.36257,36.9993],[-109.49534,36.99911],[-109.62566,36.99831],[-109.74328,36.99845],[-109.75067,36.99816],[-109.93851,36.99849],[-109.96996,36.99795],[-110.00068,36.99797],[-110.00088,36.9985],[-110.02304,36.9986],[-110.47019,36.998],[-110.47729,37.0],[-110.47845,37.0],[-110.49091,37.00357],[-110.50069,37.00426],[-110.509,37.00399],[-110.59951,37.00345],[-110.6256,37.00342],[-110.62569,37.00373],[-111.00182,37.00229],[-111.05235,37.00246],[-111.08149,37.00226],[-111.13372,37.00078],[-111.25485,37.00108],[-111.27822,37.00047],[-111.30584,37.00078],[-111.31217,37.00119],[-111.31321,37.00089],[-111.4059,37.0017],[-111.40615,37.00148],[-111.61625,37.00165],[-111.62572,37.0014],[-112.00074,37.00096],[-112.12574,37.00124],[-112.35933,37.00112],[-112.36037,37.00091],[-112.36102,37.00111],[-112.52985,37.0009],[-112.53855,37.00065],[-112.87576,37.00053],[-113.05291,36.99998],[-113.96266,36.99997],[-114.0008,37.00045],[-114.0506,37.0004],[-114.05162,37.08009],[-114.0514,37.08983],[-114.05188,37.09194],[-114.05232,37.09847],[-114.05254,37.11288],[-114.05187,37.13439],[-114.05218,37.14712],[-114.05165,37.17196],[-114.0519,37.18395],[-114.0514,37.23385],[-114.05196,37.28448],[-114.05157,37.30125],[-114.05196,37.37064],[-114.05177,37.41822],[-114.05245,37.4314],[-114.053,37.5561],[-114.05292,37.59296],[-114.05247,37.6046],[-114.052,37.66512],[-114.05219,37.67972],[-114.05159,37.74604],[-114.05182,37.74797],[-114.05161,37.75202],[-114.04992,37.76559],[-114.04847,37.80986],[-114.04968,37.8236],[-114.04947,37.83836],[-114.04993,37.85246],[-114.04966,37.88139],[-114.05042,37.99996],[-114.0499,38.1486],[-114.05014,38.24992],[-114.04942,38.26485],[-114.05017,38.42585],[-114.05052,38.4439],[-114.05048,38.50036],[-114.05036,38.52747],[-114.04981,38.54389],[-114.05019,38.56395],[-114.04975,38.72919],[-114.04917,38.75019],[-114.04908,38.8199],[-114.04946,38.87495],[-114.04804,38.87495],[-114.0491,39.00551],[-114.04835,39.25571],[-114.04708,39.49981],[-114.04773,39.54274],[-114.04727,39.75922],[-114.04778,39.79416],[-114.04721,39.82102],[-114.04713,39.90604],[-114.04656,39.99708],[-114.04684,40.0271],[-114.04639,40.0979],[-114.04674,40.10424],[-114.04615,40.2319],[-114.04605,40.3722],[-114.04631,40.37493],[-114.04583,40.42482],[-114.04522,40.42992],[-114.04558,40.49992],[-114.04528,40.50676],[-114.0435,40.72846],[-114.04347,40.74564],[-114.04383,40.75866],[-114.04318,40.77168],[-114.04267,40.8459],[-114.04145,41.20666],[-114.04145,41.20775],[-114.04255,41.21092],[-114.0414,41.21996],[-114.04026,41.47932],[-114.04025,41.49193],[-114.04116,41.50323],[-114.04044,41.61527],[-114.03997,41.62492],[-114.03988,41.74992],[-114.04115,41.85036],[-114.03975,41.87492],[-114.03965,41.88482],[-114.04172,41.99372],[-113.9939,41.9927],[-113.9059,41.98853],[-113.89326,41.98806],[-113.87584,41.98801],[-113.85076,41.98843],[-113.82216,41.98848],[-113.76736,41.98953],[-113.74495,41.98952],[-113.68709,41.9907],[-113.62584,41.99145],[-113.61798,41.99126],[-113.50068,41.9928],[-113.49641,41.99331],[-113.39601,41.99426],[-113.35747,41.99386],[-113.34014,41.99474],[-113.25074,41.99561],[-113.24894,41.99621],[-113.07485,41.9974],[-112.97926,41.99843]]]]}},{"type":"Feature","properties":{"name":"Wyoming"},"geometry":{"type":"MultiPolygon","coordinates":[[[[-110.6068,40.99628],[-110.71502,40.99635],[-110.75092,40.99685],[-111.04672,40.99796],[-111.0469,41.11944],[-111.0466,41.36602],[-111.04618,41.39883],[-111.04579,41.56521],[-111.04648,41.9558],[-111.04687,41.99994],[-111.04704,42.18319],[-111.04733,42.21232],[-111.04699,42.34806],[-111.04713,42.41595],[-111.04702,42.47406],[-111.04602,42.58272],[-111.04463,42.65615],[-111.04431,42.65707],[-111.04447,42.66622],[-111.04355,42.7195],[-111.04383,42.85735],[-111.04413,42.87492],[-111.04378,42.90775],[-111.0442,43.02212],[-111.04394,43.102],[-111.04412,43.24707],[-111.04438,43.24992],[-111.04482,43.37188],[-111.04506,43.37512],[-111.04549,43.49991],[-111.04547,43.62506],[-111.04575,43.67034],[-111.04596,43.67145],[-111.04577,43.67775],[-111.04602,43.678],[-111.04608,43.68232],[-111.04657,43.73968],[-111.04678,43.84522],[-111.04652,43.90837],[-111.0469,43.97504],[-111.04735,43.99992],[-111.04908,44.02013],[-111.04845,44.11483],[-111.04912,44.12492],[-111.04908,44.2199],[-111.04932,44.2644],[-111.0496,44.26798],[-111.04969,44.35363],[-111.04915,44.37492],[-111.0493,44.42783],[-111.04889,44.43635],[-111.04919,44.43806],[-111.04897,44.47554],[-111.05521,44.62493],[-111.05551,44.72534],[-111.05642,44.74993],[-111.05689,44.86666],[-111.05585,44.92586],[-111.05564,44.9328],[-111.05531,44.93406],[-111.05581,44.93595],[-111.05609,44.94417],[-111.0552,45.00132],[-110.87577,45.0021],[-110.78501,45.00295],[-110.76155,44.99993],[-110.75077,44.99795],[-110.70527,44.99232],[-110.62576,44.99211],[-110.54717,44.99246],[-110.48806,44.99236],[-110.40293,44.99381],[-110.3627,45.00059],[-110.34213,44.99905],[-110.32444,44.99916],[-110.28677,44.99685],[-110.1995,44.99619],[-110.12574,45.00227],[-110.1101,45.00391],[-110.08394,45.00361],[-110.02635,45.00366],[-110.00222,45.00344],[-110.00151,45.00338],[-110.0015,45.00314],[-109.87575,45.00327],[-109.87067,45.00297],[-109.75073,45.0016],[-109.66367,45.00254],[-109.63322,45.00234],[-109.57432,45.00263],[-109.38643,45.00489],[-109.37571,45.00461],[-109.25071,45.00554],[-109.10337,45.00589],[-109.08281,44.99954],[-109.0807,44.99944],[-108.79295,45.00022],[-108.62294,45.00023],[-108.56592,45.00058],[-108.50068,44.99969],[-108.27144,45.00025],[-108.2571,44.99995],[-108.24935,44.99946],[-108.23814,45.00021],[-108.21848,45.00054],[-108.14939,45.00106],[-108.12567,45.00081],[-108.12567,45.00101],[-108.00066,45.00122],[-107.99844,45.0016],[-107.62565,45.00062],[-107.60782,45.00093],[-107.56348,45.0008],[-107.50065,45.00124],[-107.50002,45.00151],[-107.35144,45.00141],[-107.13418,45.00011],[-107.12563,44.99939],[-107.10568,44.99873],[-107.09568,44.99743],[-107.08494,44.9966],[-107.07129,44.99698],[-107.0555,44.99636],[-106.89295,44.99611],[-106.88011,44.99584],[-106.75062,44.99562],[-106.62561,44.99493],[-106.33489,44.99419],[-106.25072,44.99369],[-106.00057,44.99345],[-105.92818,44.99365],[-105.91426,44.99999],[-105.91338,45.00094],[-105.90936,45.00095],[-105.87557,45.00089],[-105.84807,45.0004],[-105.25055,45.00017],[-105.22839,45.00039],[-105.12554,45.00027],[-105.12281,45.00058],[-105.01856,45.00015],[-105.01836,45.00044],[-104.98052,44.99998],[-104.8187,44.99973],[-104.75482,44.99904],[-104.74781,44.99939],[-104.72637,44.99952],[-104.66517,44.99862],[-104.65903,44.999],[-104.36669,44.99815],[-104.2505,44.99799],[-104.25015,44.99822],[-104.12212,44.99788],[-104.0577,44.99738],[-104.05591,44.87499],[-104.05649,44.86703],[-104.05621,44.80072],[-104.05586,44.78362],[-104.05574,44.62499],[-104.05604,44.58158],[-104.05563,44.36073],[-104.05539,44.24998],[-104.05449,44.18038],[-104.05498,43.94352],[-104.05474,43.93817],[-104.0551,43.93705],[-104.05549,43.85348],[-104.05488,43.583],[-104.0551,43.56502],[-104.05482,43.53332],[-104.0548,43.41872],[-104.05455,43.40552],[-104.05472,43.3751],[-104.05428,43.3098],[-104.05391,43.29688],[-104.05383,43.20356],[-104.05327,43.10172],[-104.05279,42.75041],[-104.053,42.74132],[-104.05258,42.65019],[-104.05289,42.64807],[-104.0526,42.63114],[-104.05289,42.62999],[-104.05311,42.49996],[-104.05265,42.24996],[-104.05312,42.24996],[-104.05255,42.1668],[-104.05305,42.13135],[-104.05248,42.11611],[-104.05299,42.08003],[-104.05261,41.99977],[-104.05285,41.97599],[-104.05263,41.94339],[-104.05297,41.91697],[-104.05271,41.9067],[-104.05293,41.90583],[-104.05301,41.88926],[-104.05276,41.8789],[-104.05298,41.73944],[-104.05288,41.72716],[-104.05267,41.72707],[-104.05286,41.59225],[-104.05257,41.5811],[-104.05237,41.52283],[-104.0526,41.41836],[-104.05231,41.41718],[-104.05224,41.39807],[-104.05269,41.33056],[-104.05231,41.32106],[-104.05267,41.32079],[-104.05269,41.31956],[-104.05245,41.2782],[-104.05291,41.27781],[-104.05271,41.27263],[-104.05315,41.24076],[-104.05351,41.15726],[-104.05339,41.10534],[-104.05308,41.10498],[-104.05302,41.09028],[-104.05325,41.00141],[-104.17344,41.00177],[-104.62552,41.00143],[-104.81628,40.99929],[-104.83869,40.99886],[-104.85527,40.99805],[-104.87005,40.9983],[-105.24882,40.99844],[-105.27528,40.99807],[-105.72941,40.99682],[-106.00056,40.99725],[-106.06118,40.997],[-106.19519,40.99758],[-106.31422,40.99892],[-106.34641,40.99964],[-106.38636,41.00114],[-106.39864,41.0011],[-106.45571,41.00212],[-106.49398,41.00214],[-106.50059,41.00189],[-106.7519,41.0027],[-106.85777,41.00266],[-106.8756,41.003],[-107.00061,41.00344],[-107.23862,41.0028],[-107.36749,41.00307],[-107.47868,41.00267],[-107.50062,41.00235],[-107.62565,41.00212],[-108.00064,41.00181],[-108.04654,41.00206],[-108.08922,41.00158],[-108.08951,41.00123],[-108.12564,41.00133],[-108.18123,41.00046],[-108.24972,41.00036],[-108.25128,41.00011],[-108.50066,41.00011],[-108.5196,40.99996],[-108.52603,40.99959],[-108.63111,41.00016],[-108.85377,41.00003],[-109.17368,41.00086],[-109.23198,41.00206],[-109.25074,41.00101],[-109.50069,40.99913],[-109.53493,40.99814],[-109.54322,40.9984],[-109.658,40.99849],[-109.74856,40.99779],[-109.75071,40.998],[-109.87113,40.99754],[-109.97553,40.99791],[-110.00033,40.99734],[-110.0065,40.99782],[-110.02209,40.99777],[-110.12164,40.9971],[-110.12571,40.99655],[-110.1947,40.99572],[-110.2379,40.99543],[-110.25432,40.99607],[-110.28493,40.99559],[-110.36047,40.99535],[-110.37571,40.99495],[-110.43631,40.99485],[-110.44339,40.99461],[-110.44908,40.99483],[-110.50072,40.99475],[-110.53982,40.99635],[-110.6068,40.99628]]]]}}]};
@@ -270,7 +280,7 @@ function marginColor(m) {
 }
 $("ramp").innerHTML = RAMP.map(c => `<div style="background:${c}"></div>`).join("");
 
-let filterFn = null;   // when set, only matching precincts are highlighted
+let filterFn = null;
 function precinctStyle(f) {
   const on = !filterFn || filterFn(f.properties);
   return { fillColor: marginColor(f.properties.m), fillOpacity: on ? 0.65 : 0.04, color: on ? "#334155" : "#94a3b8", weight: on ? 0.4 : 0.2, opacity: on ? 0.6 : 0.2 };
@@ -279,9 +289,9 @@ const precincts = L.geoJSON(null, {
   style: precinctStyle,
   onEachFeature: (f, layer) => {
     layer.on("mouseover", e => { showCard(f.properties); placeCard(e.originalEvent); e.target.setStyle({ weight: 2.5, color: "#0f172a", opacity: 1 }); e.target.bringToFront(); });
-    layer.on("mouseout",  e => { hideCard(); precincts.resetStyle(e.target); });
     layer.on("mousemove", e => placeCard(e.originalEvent));
-    layer.on("click",     e => { showCard(f.properties, isTouch); placeCard(e.originalEvent); });   // tap support on phones
+    layer.on("mouseout",  e => { hideCard(); precincts.resetStyle(e.target); });
+    layer.on("click",     e => { showCard(f.properties, isTouch); placeCard(e.originalEvent); });
   },
   attribution: 'Election data: <a href="https://github.com/nytimes/presidential-precinct-map-2024">The New York Times</a> (non-commercial use)'
 });
@@ -299,7 +309,6 @@ function loadPrecincts() {
 let cardTimer;
 const isTouch = matchMedia("(hover: none)").matches;
 const card = $("card");
-// Put the card just beside the mouse; flip left/up when it would run off the screen.
 function placeCard(ev) {
   if (isTouch || !ev) { card.classList.add("phone"); card.classList.remove("follow"); return; }
   card.classList.add("follow"); card.classList.remove("phone");
@@ -307,8 +316,7 @@ function placeCard(ev) {
   let x = ev.clientX + gap, y = ev.clientY + gap;
   if (x + w > W - 8) x = ev.clientX - w - gap;
   if (y + h > H - 8) y = ev.clientY - h - gap;
-  card.style.left = Math.max(8, x) + "px";
-  card.style.top = Math.max(8, y) + "px";
+  card.style.left = Math.max(8, x) + "px"; card.style.top = Math.max(8, y) + "px";
 }
 function showCard(p, sticky) {
   clearTimeout(cardTimer);
@@ -316,8 +324,8 @@ function showCard(p, sticky) {
   const pr = pct(p.r, p.t), pd = pct(p.d, p.t), po = pct(oth, p.t);
   $("cWhere").textContent = `${p.c} County, ${p.s === "UT" ? "Utah" : "Wyoming"}`;
   $("cName").textContent = `Precinct ${p.n}`;
-  const rep = p.m < 0, m = Math.abs(p.m * 100).toFixed(1);
-  $("cLead").textContent = `${rep ? "Trump" : "Harris"} +${m}`;
+  const rep = p.m < 0;
+  $("cLead").textContent = `${rep ? "Trump" : "Harris"} +${Math.abs(p.m * 100).toFixed(1)}`;
   $("cLead").style.background = rep ? "#fee2e2" : "#dbeafe";
   $("cLead").style.color = rep ? "#b91c1c" : "#1d4ed8";
   $("bRep").style.width = pr + "%"; $("bOth").style.width = po + "%"; $("bDem").style.width = pd + "%";
@@ -326,101 +334,141 @@ function showCard(p, sticky) {
   $("vOth").textContent = fmt(oth); $("pOth").textContent = po.toFixed(1) + "%";
   $("cTotal").textContent = `${fmt(p.t)} total votes`;
   $("cBoundary").textContent = p.o ? "Official boundary" : "Estimated boundary";
-  $("card").classList.add("show");
+  card.classList.add("show");
   if (sticky) cardTimer = setTimeout(hideCard, 6000);
 }
-function hideCard() { $("card").classList.remove("show"); }
+function hideCard() { card.classList.remove("show"); }
 
-// ---------- Layer switches ----------
-const legends = { tElection: "lgElection", tLand: "lgLand" };
+// ---------- Layer rail toggles ----------
+const railLayers = {
+  rElection: { layer: precincts, legend: "lgElection", onAdd: loadPrecincts },
+  rLand: { layer: landOwnership, legend: "lgLand" },
+  rStates: { layer: stateLayer }
+};
 function setLayer(id, on) {
-  $(id).checked = on;
-  const layer = { tElection: precincts, tLand: landOwnership, tStates: stateLayer }[id];
-  if (on) { layer.addTo(map); if (id === "tElection") loadPrecincts(); } else map.removeLayer(layer);
-  if (legends[id]) $(legends[id]).classList.toggle("show", on);
+  const r = railLayers[id], b = $(id);
+  b.classList.toggle("on", on); b.setAttribute("aria-pressed", on);
+  if (on) { r.layer.addTo(map); r.onAdd && r.onAdd(); } else map.removeLayer(r.layer);
+  if (r.legend) $(r.legend).classList.toggle("show", on);
 }
-["tElection", "tLand", "tStates"].forEach(id => $(id).onchange = e => setLayer(id, e.target.checked));
-$("layersToggle").onclick = () => $("layers").classList.toggle("open");
+Object.keys(railLayers).forEach(id => $(id).onclick = () => setLayer(id, !map.hasLayer(railLayers[id].layer)));
 
-// ---------- Search / filter box ----------
-// Reads plain-English requests and turns them into filters. Runs entirely in the browser.
+// ---------- Filters dropdown ----------
 const COUNTIES = {
   UT: "Beaver,Box Elder,Cache,Carbon,Daggett,Davis,Duchesne,Emery,Garfield,Grand,Iron,Juab,Kane,Millard,Morgan,Piute,Rich,Salt Lake,San Juan,Sanpete,Sevier,Summit,Tooele,Uintah,Utah,Wasatch,Washington,Wayne,Weber".split(","),
   WY: "Albany,Big Horn,Campbell,Carbon,Converse,Crook,Fremont,Goshen,Hot Springs,Johnson,Laramie,Lincoln,Natrona,Niobrara,Park,Platte,Sheridan,Sublette,Sweetwater,Teton,Uinta,Washakie,Weston".split(",")
 };
-const num = s => parseFloat(String(s).replace(/,/g, ""));
+const SOON = {
+  land: ["Land", "Private vs. public land, acreage range, parcels bordering BLM or Forest Service land, hiding landlocked parcels."],
+  water: ["Water", "Streams or rivers on the parcel, registered wells nearby, water rights on record."],
+  access: ["Access", "Distance to a paved or county road, year-round access."],
+  terrain: ["Terrain", "Slope (flat enough to build), elevation range."],
+  hazards: ["Hazards", "FEMA flood zones, wildfire risk."],
+  utilities: ["Utilities", "Distance to power lines, cell coverage."]
+};
+const F = { state: "", county: "", winner: "", min: "", max: "", close: false };
 
+function fillCounties() {
+  const sel = $("fCounty"), keep = sel.value;
+  const list = F.state ? COUNTIES[F.state].map(c => [F.state, c]) : [...COUNTIES.UT.map(c => ["UT", c]), ...COUNTIES.WY.map(c => ["WY", c])];
+  sel.innerHTML = '<option value="">Any county</option>' + list.map(([s, c]) => `<option value="${s}|${c}">${c}${F.state ? "" : ", " + s}</option>`).join("");
+  sel.value = list.some(([s, c]) => `${s}|${c}` === keep) ? keep : "";
+}
+fillCounties();
+function segBind(id, key, after) {
+  $(id).querySelectorAll("button").forEach(b => b.onclick = () => {
+    $(id).querySelectorAll("button").forEach(x => x.classList.toggle("on", x === b));
+    F[key] = b.dataset.v; after && after();
+  });
+}
+segBind("fState", "state", fillCounties);
+segBind("fWinner", "winner");
+
+function openFilters(open) {
+  $("filters").classList.toggle("open", open);
+  $("filterBtn").classList.toggle("open", open);
+  $("filterBtn").setAttribute("aria-expanded", open);
+}
+$("filterBtn").onclick = () => openFilters(!$("filters").classList.contains("open"));
+document.querySelectorAll(".cat").forEach(c => c.onclick = () => {
+  document.querySelectorAll(".cat").forEach(x => x.classList.toggle("on", x === c));
+  const k = c.dataset.cat, isEl = k === "election";
+  document.querySelector('[data-pane="election"]').style.display = isEl ? "flex" : "none";
+  document.querySelector('[data-pane="soon"]').style.display = isEl ? "none" : "flex";
+  if (!isEl) { $("soonTitle").textContent = SOON[k][0]; $("soonText").textContent = "Coming: " + SOON[k][1]; }
+});
+
+function panelFilter() {
+  const t = [], tags = [];
+  const add = (fn, tag) => { t.push(fn); tags.push(tag); };
+  F.county = $("fCounty").value; F.min = $("fMin").value; F.max = $("fMax").value; F.close = $("fClose").checked;
+  if (F.state) add(p => p.s === F.state, F.state === "UT" ? "Utah" : "Wyoming");
+  if (F.county) { const [s, c] = F.county.split("|"); add(p => p.s === s && p.c === c, `${c} County`); }
+  if (F.winner === "r") add(p => p.m < 0, "Trump won");
+  if (F.winner === "d") add(p => p.m > 0, "Harris won");
+  if (F.min !== "") { const v = +F.min / 100; add(p => p.r / p.t >= v, `Trump ≥ ${F.min}%`); }
+  if (F.max !== "") { const v = +F.max / 100; add(p => p.r / p.t <= v, `Trump ≤ ${F.max}%`); }
+  if (F.close) add(p => Math.abs(p.m) <= 0.1, "Within 10 pts");
+  return { tests: t, tags };
+}
+function updateCount(n) { $("filterCount").textContent = n; $("filterCount").classList.toggle("show", n > 0); }
+$("fApply").onclick = () => { const f = panelFilter(); openFilters(false); applyTests(f.tests, f.tags, "your filters"); };
+$("fReset").onclick = () => {
+  Object.assign(F, { state: "", county: "", winner: "", min: "", max: "", close: false });
+  ["fState", "fWinner"].forEach(id => $(id).querySelectorAll("button").forEach((b, i) => b.classList.toggle("on", i === 0)));
+  $("fMin").value = ""; $("fMax").value = ""; $("fClose").checked = false; fillCounties(); $("fCounty").value = "";
+};
+
+// ---------- Search box (plain-English) ----------
+const num = s => parseFloat(String(s).replace(/,/g, ""));
 function parseQuery(raw) {
   const q = " " + raw.toLowerCase().replace(/[“”"]/g, "") + " ";
   const tests = [], tags = [];
   const add = (fn, tag) => { tests.push(fn); tags.push(tag); };
-
-  // Place search: "go to X", "zoom to X", "near X"
   const go = q.match(/\b(?:go to|goto|take me to|zoom to|fly to|show me|near|find)\s+(.+?)\s*$/);
   if (go && !/precinct|trump|harris|county|won|vote|%|competitive|close/.test(go[1])) return { place: go[1].trim() };
-
-  // State. "utah county" is a county, not the state.
   const saysWY = /\b(wyoming|wy)\b/.test(q);
   const saysUT = /\b(utah|ut)\b(?!\s+(county|co\b))/.test(q);
   const state = saysWY && !saysUT ? "WY" : saysUT && !saysWY ? "UT" : null;
   if (state) add(p => p.s === state, state === "UT" ? "Utah" : "Wyoming");
-
-  // County (Carbon exists in both states; Utah County needs the word "county")
-  const countyTests = [], countyTags = [];
+  const ct = [], ctag = [];
   for (const [st, list] of Object.entries(COUNTIES)) for (const c of list) {
     const m = q.match(new RegExp("\\b" + c.toLowerCase() + "(\\s+county|\\s+co\\b)?\\b"));
-    if (!m) continue;
-    if (c === "Utah" && !m[1]) continue;
-    if (state && state !== st) continue;
-    countyTests.push(p => p.c === c && p.s === st);
-    countyTags.push(`${c} County${c === "Carbon" && !state ? ` (${st})` : ""}`);
+    if (!m || (c === "Utah" && !m[1]) || (state && state !== st)) continue;
+    ct.push(p => p.c === c && p.s === st); ctag.push(`${c} County${c === "Carbon" && !state ? ` (${st})` : ""}`);
   }
-  if (countyTests.length) add(p => countyTests.some(t => t(p)), countyTags.join(" or "));
-
-  // Winner
+  if (ct.length) add(p => ct.some(t => t(p)), ctag.join(" or "));
   if (/\b(trump|republicans?|gop|red)\s+(won|wins|win|carried|precincts?)\b|\bwon by trump\b/.test(q)) add(p => p.m < 0, "Trump won");
   if (/\b(harris|democrats?|democratic|dems?|blue)\s+(won|wins|win|carried|precincts?)\b|\bwon by harris\b/.test(q)) add(p => p.m > 0, "Harris won");
-
-  // Candidate share: "trump over 80%", "harris at least 40 percent"
   const share = /\b(trump|harris)\s+(?:is\s+|got\s+|with\s+)?(over|above|more than|greater than|at least|>=|>|under|below|less than|at most|<=|<)\s*(\d+(?:\.\d+)?)\s*(?:%|percent)?/g;
   let s;
   while ((s = share.exec(q))) {
-    const who = s[1], v = num(s[3]) / 100, key = who === "trump" ? "r" : "d";
-    const up = /over|above|more|greater|least|>/.test(s[2]);
+    const who = s[1], v = num(s[3]) / 100, key = who === "trump" ? "r" : "d", up = /over|above|more|greater|least|>/.test(s[2]);
     add(p => { const x = p[key] / p.t; return up ? x >= v : x <= v; }, `${who[0].toUpperCase() + who.slice(1)} ${up ? "≥" : "≤"} ${s[3]}%`);
   }
-
-  // Margin: "margin under 10", "within 5 points", or "competitive"
   const mg = q.match(/\b(?:margin\s+(?:under|below|less than|within)|within)\s*(\d+(?:\.\d+)?)\s*(?:%|points?|pts)?/);
   if (mg) { const v = num(mg[1]) / 100; add(p => Math.abs(p.m) <= v, `Margin ≤ ${mg[1]} pts`); }
-  else if (/\b(competitive|close|swing|tossup|toss-up|purple)\b/.test(q)) add(p => Math.abs(p.m) <= 0.1, "Margin ≤ 10 pts");
-
-  // Vote totals: "over 1000 votes", "rural"
+  else if (/\b(competitive|close|swing|tossup|toss-up|purple)\b/.test(q)) add(p => Math.abs(p.m) <= 0.1, "Within 10 pts");
   const vt = q.match(/\b(over|above|more than|at least|under|below|less than|fewer than)\s*([\d,]+)\s*(?:total\s+)?votes?\b/);
   if (vt) { const v = num(vt[2]), up = /over|above|more|least/.test(vt[1]); add(p => up ? p.t >= v : p.t <= v, `${up ? "≥" : "≤"} ${fmt(v)} votes`); }
   else if (/\b(rural|remote|sparse|small)\b/.test(q)) add(p => p.t < 500, "Under 500 votes");
-
   if (/\bestimated\b/.test(q)) add(p => !p.o, "Estimated boundary");
-
   if (!tests.length) return { place: raw.replace(/^(go to|show me|zoom to|find)\s+/i, "").trim() };
-  return { fn: p => tests.every(t => t(p)), tags };
+  return { tests, tags };
 }
 
-async function runQuery(raw) {
-  if (!raw.trim()) return;
-  const parsed = parseQuery(raw);
-  if (parsed.place) return goToPlace(parsed.place);
-
-  if (!map.hasLayer(precincts)) setLayer("tElection", true);
+async function applyTests(tests, tags, label) {
+  if (!tests.length) { clearFilter(); return; }
+  if (!map.hasLayer(precincts)) setLayer("rElection", true);
   await loadPrecincts();
-  filterFn = parsed.fn;
+  filterFn = p => tests.every(t => t(p));
   precincts.setStyle(precinctStyle);
-
+  updateCount(tags.length);
   const hits = precinctData.features.filter(f => filterFn(f.properties));
-  if (!hits.length) return showResult(`No precincts match “${raw}”.`, parsed.tags);
+  if (!hits.length) return showResult(`No precincts match ${label}.`, tags);
   let r = 0, d = 0, t = 0;
   hits.forEach(f => { r += f.properties.r; d += f.properties.d; t += f.properties.t; });
-  showResult(`<b>${fmt(hits.length)}</b> precincts · ${fmt(t)} votes · Trump ${pct(r, t).toFixed(1)}% · Harris ${pct(d, t).toFixed(1)}%`, parsed.tags);
+  showResult(`<b>${fmt(hits.length)}</b> precincts · ${fmt(t)} votes · Trump ${pct(r, t).toFixed(1)}% · Harris ${pct(d, t).toFixed(1)}%`, tags);
   map.fitBounds(L.geoJSON({ type: "FeatureCollection", features: hits }).getBounds(), { padding: [60, 60], maxZoom: 12 });
 }
 
@@ -435,21 +483,25 @@ async function goToPlace(place) {
     showResult(`📍 ${res[0].display_name.split(",").slice(0, 3).join(",")}`, []);
   } catch { showResult("Place search isn't available right now.", []); }
 }
-
 function showResult(html, tags) {
   $("resultText").innerHTML = html;
   $("resultTags").innerHTML = tags.map(t => `<span class="tag">${t}</span>`).join("");
-  $("result").classList.add("show"); $("chips").style.display = "none";
+  $("result").classList.add("show");
 }
 function clearFilter() {
-  filterFn = null; precincts.setStyle(precinctStyle);
-  $("result").classList.remove("show"); $("chips").style.display = ""; $("askInput").value = "";
+  filterFn = null; precincts.setStyle(precinctStyle); updateCount(0);
+  $("result").classList.remove("show"); $("askInput").value = "";
 }
-$("ask").onsubmit = e => { e.preventDefault(); runQuery($("askInput").value); };
-$("clearBtn").onclick = clearFilter;
-document.querySelectorAll(".chip").forEach(c => c.onclick = () => { $("askInput").value = c.textContent; runQuery(c.textContent); });
+$("ask").onsubmit = e => {
+  e.preventDefault(); openFilters(false);
+  const raw = $("askInput").value; if (!raw.trim()) return;
+  const parsed = parseQuery(raw);
+  parsed.place ? goToPlace(parsed.place) : applyTests(parsed.tests, parsed.tags, `“${raw}”`);
+};
+$("clearBtn").onclick = () => { clearFilter(); $("fReset").click(); };
 
-// ---------- Coordinates readout ----------
+// Close menus when clicking the map
+map.on("click", () => { openFilters(false); $("basePanel").classList.remove("open"); });
 map.on("mousemove", e => setStatus(`${e.latlng.lat.toFixed(4)}, ${e.latlng.lng.toFixed(4)}`));
 </script>
 </body>
