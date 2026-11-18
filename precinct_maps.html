@@ -25,17 +25,14 @@
   button { font: inherit; cursor: pointer; }
 
   /* ---------- Brand + search ---------- */
-  #top { position: absolute; top: 16px; left: 16px; right: 84px; z-index: 1000; display: flex; gap: 10px; align-items: flex-start; pointer-events: none; }
+  #top { position: absolute; top: 16px; left: 16px; right: 16px; z-index: 1000; display: grid; grid-template-columns: minmax(max-content, 1fr) minmax(0, 640px) minmax(74px, 1fr); gap: 10px; align-items: start; pointer-events: none; }
+  .brand { justify-self: start; }
   #top > * { pointer-events: auto; }
   .brand { display: flex; align-items: center; gap: 10px; height: 56px; padding: 0 16px 0 10px; background: var(--ink); border-radius: 14px; box-shadow: var(--shadow); color: white; white-space: nowrap; }
   .brand .logo { width: 36px; height: 36px; border-radius: 10px; background: var(--red); display: grid; place-items: center; }
   .brand b { font-size: 15px; }
-  #searchCol { flex: 1; min-width: 0; max-width: 720px; position: relative; }
+  #searchCol { min-width: 0; position: relative; }
   #ask { display: flex; align-items: center; gap: 8px; height: 56px; padding: 0 6px; background: var(--ink); border-radius: 14px; box-shadow: var(--shadow); }
-  #filterBtn { display: flex; align-items: center; gap: 7px; height: 44px; padding: 0 12px; border: 0; border-radius: 10px; background: var(--ink-2); color: #e2e8f0; font-size: 14px; font-weight: 600; flex: none; }
-  #filterBtn:hover, #filterBtn.open { background: var(--ink-3); color: white; }
-  #filterCount { display: none; min-width: 20px; height: 20px; padding: 0 6px; border-radius: 10px; background: var(--red); color: white; font-size: 12px; font-weight: 700; align-items: center; justify-content: center; }
-  #filterCount.show { display: inline-flex; }
   #ask .spark { color: #f87171; flex: none; margin-left: 4px; }
   #askInput { flex: 1; min-width: 0; height: 44px; border: 0; outline: 0; background: transparent; color: white; font: inherit; font-size: 14px; }
   #askInput::placeholder { color: #94a3b8; }
@@ -49,24 +46,6 @@
   .tag { background: var(--red-soft); color: var(--red-dark); font-size: 11px; font-weight: 600; padding: 2px 8px; border-radius: 999px; }
   .btn-ghost { height: 36px; padding: 0 10px; border: 0; border-radius: 8px; background: transparent; color: var(--muted); font-size: 13px; }
   .btn-ghost:hover { background: #f1f5f9; color: var(--text); }
-
-  /* ---------- Filters dropdown ---------- */
-  #filters { display: none; position: absolute; top: 64px; left: 0; width: 400px; max-width: calc(100vw - 32px); max-height: calc(100vh - 100px); overflow-y: auto; background: white; border-radius: 16px; box-shadow: 0 18px 44px rgba(15,23,42,.28); overflow: hidden; }
-  #filters.open { display: flex; }
-  #pane { flex: 1; padding: 18px 20px; display: flex; flex-direction: column; gap: 16px; }
-  #pane h4 { margin: 0; font-size: 16px; }
-  #pane .sub { font-size: 13px; color: var(--muted); margin-top: 2px; }
-  .field { display: flex; flex-direction: column; gap: 6px; }
-  .field > span { font-size: 11px; font-weight: 700; color: var(--ink-3); text-transform: uppercase; letter-spacing: .06em; }
-  .seg { display: inline-flex; background: #f1f5f9; border-radius: 10px; padding: 3px; gap: 2px; }
-  .seg button { height: 32px; padding: 0 12px; border: 0; border-radius: 8px; background: transparent; color: #475569; font-size: 13px; }
-  .seg button.on { background: white; color: var(--text); font-weight: 600; box-shadow: 0 1px 3px rgba(0,0,0,.12); }
-  .row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; font-size: 13px; color: #475569; }
-  .row input, .row select, .field select { height: 38px; padding: 0 10px; border: 1px solid #cbd5e1; border-radius: 9px; font: inherit; font-size: 14px; color: var(--text); background: white; }
-  .row input { width: 84px; }
-  .check { display: flex; align-items: center; justify-content: space-between; padding: 10px 12px; background: #f8fafc; border-radius: 10px; font-size: 14px; }
-  .check input { width: 18px; height: 18px; accent-color: var(--red); }
-  .paneFoot { margin-top: auto; display: flex; justify-content: space-between; align-items: center; }
 
   /* ---------- Layer rail ---------- */
   #rail { position: absolute; top: 16px; right: 16px; z-index: 1001; display: flex; flex-direction: column; gap: 6px; padding: 6px; background: var(--ink); border-radius: 14px; box-shadow: var(--shadow); }
@@ -160,14 +139,14 @@
 
   /* ---------- Phones (portrait) and short landscape screens ---------- */
   @media (max-width: 760px), (max-height: 500px) {
-    #top { top: calc(10px + env(safe-area-inset-top)); left: calc(10px + env(safe-area-inset-left)); right: calc(10px + env(safe-area-inset-right)); gap: 8px; z-index: 1002; }
+    #top { display: flex; top: calc(10px + env(safe-area-inset-top)); left: calc(10px + env(safe-area-inset-left)); right: calc(10px + env(safe-area-inset-right)); gap: 8px; z-index: 1002; }
     .brand { height: 48px; padding: 0 6px; border-radius: 12px; }
     .brand b { display: none; }
     #ask { height: 48px; padding: 0 4px; gap: 4px; border-radius: 12px; }
-    #filterBtn { height: 40px; padding: 0 10px; font-size: 0; gap: 4px; }
-    #filterCount { font-size: 12px; }
     #ask .spark { display: none; }
     #askInput { height: 40px; font-size: 16px; padding-left: 4px; } /* 16px stops iPhone from zooming in on tap */
+    #searchCol { flex: 1; }
+    #ask { padding-left: 8px; }
     #ask .btn-red { height: 40px; padding: 0 14px; }
     #result { margin-right: 58px; }
 
@@ -175,7 +154,7 @@
     .rb { width: 42px; height: 42px; }
 
     /* Menus become bottom sheets */
-    #filters, #basePanel, #racePanel, #totalsPanel {
+    #basePanel, #racePanel, #totalsPanel {
       position: fixed; top: auto !important; left: 0; right: 0; bottom: 0; width: auto; max-width: none;
       max-height: calc(100vh - 70px); max-height: calc(100dvh - 70px); overflow-y: auto; overscroll-behavior: contain;
       border-radius: 18px 18px 0 0; box-shadow: 0 -10px 40px rgba(15,23,42,.3); z-index: 1003;
@@ -185,13 +164,6 @@
     .raceOpt.on { padding: 9px 13px 9px 9px; }
     #totalsPanel { padding: 16px 16px calc(16px + env(safe-area-inset-bottom)); }
     .baseOpt { height: 46px; font-size: 14px; }
-    #filters { flex-direction: column; }
-    #pane { min-height: 0; padding: 16px 16px 0; }
-    .paneFoot { position: sticky; bottom: 0; background: white; margin: 0 -16px; padding: 12px 16px calc(12px + env(safe-area-inset-bottom)); border-top: 1px solid var(--line); }
-    .seg { display: flex; }
-    .seg button { flex: 1; height: 38px; }
-    .row input, .row select, .field select { font-size: 16px; height: 42px; }
-    .row label { display: flex; align-items: center; gap: 6px; }
 
     /* Bottom of the map: legends left (above the scale), pinch to zoom instead of +/- */
     .leaflet-control-zoom { display: none; }
@@ -204,7 +176,7 @@
   }
   /* Landscape phones: keep menus from stretching edge to edge */
   @media (max-height: 500px) and (min-width: 761px) {
-    #filters, #basePanel, #racePanel, #totalsPanel { width: min(600px, 100%); margin: 0 auto; }
+    #basePanel, #racePanel, #totalsPanel { width: min(600px, 100%); margin: 0 auto; }
   }
 </style>
 </head>
@@ -219,32 +191,11 @@
 
   <div id="searchCol">
     <form id="ask" autocomplete="off">
-      <button type="button" id="filterBtn" aria-expanded="false" aria-controls="filters">
-        <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M4 6h16M7 12h10M10 18h4"/></svg>
-        Filters <span id="filterCount">0</span>
-      </button>
       <svg class="spark" aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l1.9 5.6L19.5 9.5l-5.6 1.9L12 17l-1.9-5.6L4.5 9.5l5.6-1.9z"/></svg>
       <label for="askInput" style="position:absolute;left:-9999px">Search or ask</label>
       <input id="askInput" placeholder="Ask: “Trump over 80% in Wyoming”, “go to Moab” or a precinct code">
       <button type="submit" class="btn-red">Search</button>
     </form>
-
-    <div id="filters" role="dialog" aria-label="Filters">
-      <div id="pane">
-        <div data-pane="election" style="display:flex;flex-direction:column;gap:16px;flex:1">
-          <div><h4 id="fTitle">Election 2024</h4><div class="sub" id="fSub">Filter precincts by how they voted for president</div></div>
-          <div class="field"><span>State</span>
-            <div class="seg" id="fState"><button type="button" data-v="" class="on">Both</button><button type="button" data-v="UT">Utah</button><button type="button" data-v="WY">Wyoming</button></div></div>
-          <div class="field"><span>County</span><select id="fCounty" aria-label="County"><option value="">Any county</option></select></div>
-          <div class="field"><span>Winner</span>
-            <div class="seg" id="fWinner"><button type="button" data-v="" class="on">Either</button><button type="button" data-v="r" id="fWinR">Trump</button><button type="button" data-v="d" id="fWinD">Harris</button></div></div>
-          <div class="field"><span id="fShareLbl">Trump vote share</span>
-            <div class="row"><label>at least <input id="fMin" type="number" min="0" max="100" placeholder="0"></label><label>at most <input id="fMax" type="number" min="0" max="100" placeholder="100"></label>%</div></div>
-          <label class="check">Competitive only (within 10 points)<input type="checkbox" id="fClose"></label>
-          <div class="paneFoot"><button type="button" class="btn-ghost" id="fReset">Reset</button><button type="button" class="btn-red" id="fApply">Show precincts</button></div>
-        </div>
-      </div>
-    </div>
 
     <div id="result">
       <div class="txt"><div id="resultText"></div><div class="tags" id="resultTags"></div></div>
@@ -330,7 +281,6 @@ document.querySelectorAll(".baseOpt").forEach(b => b.onclick = () => {
 $("rBase").onclick = () => {
   const open = $("basePanel").classList.toggle("open");
   $("rBase").setAttribute("aria-expanded", open);
-  if (open) openFilters(false);
 };
 
 // ---------- State outlines (official Census boundaries) ----------
@@ -504,7 +454,7 @@ setLayer = (id, on) => { _setLayer(id, on); if (id === "rElection") { syncAttrib
 // ---------- Race picker (opens from the election button) ----------
 function openRacePanel(open) {
   $("racePanel").classList.toggle("open", open); $("rElection").setAttribute("aria-expanded", open);
-  if (open) { $("basePanel").classList.remove("open"); $("rBase").setAttribute("aria-expanded", "false"); openFilters(false); }
+  if (open) { $("basePanel").classList.remove("open"); $("rBase").setAttribute("aria-expanded", "false"); }
 }
 $("rElection").onclick = () => openRacePanel(!$("racePanel").classList.contains("open"));
 $("rBase").addEventListener("click", () => openRacePanel(false));
@@ -512,17 +462,15 @@ function markRace() {
   const on = map.hasLayer(precincts);
   document.querySelectorAll(".raceOpt").forEach(b => b.classList.toggle("on", on && b.dataset.race === race));
 }
+const LBL = { r: "Trump", d: "Harris" }; // side names for the current race
 function relabel() {
   const R = RACES[race], ms = R.measure;
   $("ramp").innerHTML = ramp().map(c => `<div style="background:${c}"></div>`).join("");
   $("lgTitle").textContent = R.title;
   $("lgR").textContent = `${ms ? "Against" : race === "p2024" || ["sen", "gov"].includes(race) ? R.r : "Rep."} +60`;
   $("lgD").textContent = `${ms ? "For" : race === "p2024" || ["sen", "gov"].includes(race) ? R.d : "Dem."} +60`;
-  $("fTitle").textContent = R.title.replace(/^./, c => c.toUpperCase());
-  $("fSub").textContent = ms ? "Filter precincts by how they voted on this measure" : "Filter precincts by how they voted in this race";
-  $("fWinR").textContent = ms ? "Against" : race === "p2024" || ["sen", "gov"].includes(race) ? R.r : "Republican";
-  $("fWinD").textContent = ms ? "For" : race === "p2024" || ["sen", "gov"].includes(race) ? R.d : "Democrat";
-  $("fShareLbl").textContent = `${$("fWinR").textContent} vote share`;
+  LBL.r = ms ? "Against" : race === "p2024" || ["sen", "gov"].includes(race) ? R.r : "Republican";
+  LBL.d = ms ? "For" : race === "p2024" || ["sen", "gov"].includes(race) ? R.d : "Democrat";
 }
 let lastQuery = null;
 async function setRace(k) {
@@ -591,66 +539,18 @@ async function renderTotals() {
 }
 function openTotals(open) {
   $("totalsPanel").classList.toggle("open", open); $("rTotals").classList.toggle("on", open); $("rTotals").setAttribute("aria-expanded", open);
-  if (open) { openRacePanel(false); openFilters(false); $("basePanel").classList.remove("open"); renderTotals(); }
+  if (open) { openRacePanel(false); $("basePanel").classList.remove("open"); renderTotals(); }
 }
 $("rTotals").onclick = () => openTotals(!$("totalsPanel").classList.contains("open"));
 $("lgTotals").onclick = () => openTotals(true);
 $("tClose").onclick = () => openTotals(false);
 $("rBase").addEventListener("click", () => openTotals(false));
 $("rElection").addEventListener("click", () => openTotals(false));
-$("filterBtn").addEventListener("click", () => openTotals(false));
 
-// ---------- Filters dropdown ----------
+// ---------- Counties (for the search box) ----------
 const COUNTIES = {
   UT: "Beaver,Box Elder,Cache,Carbon,Daggett,Davis,Duchesne,Emery,Garfield,Grand,Iron,Juab,Kane,Millard,Morgan,Piute,Rich,Salt Lake,San Juan,Sanpete,Sevier,Summit,Tooele,Uintah,Utah,Wasatch,Washington,Wayne,Weber".split(","),
   WY: "Albany,Big Horn,Campbell,Carbon,Converse,Crook,Fremont,Goshen,Hot Springs,Johnson,Laramie,Lincoln,Natrona,Niobrara,Park,Platte,Sheridan,Sublette,Sweetwater,Teton,Uinta,Washakie,Weston".split(",")
-};
-const F = { state: "", county: "", winner: "", min: "", max: "", close: false };
-
-function fillCounties() {
-  const sel = $("fCounty"), keep = sel.value;
-  const list = F.state ? COUNTIES[F.state].map(c => [F.state, c]) : [...COUNTIES.UT.map(c => ["UT", c]), ...COUNTIES.WY.map(c => ["WY", c])];
-  sel.innerHTML = '<option value="">Any county</option>' + list.map(([s, c]) => `<option value="${s}|${c}">${c}${F.state ? "" : ", " + s}</option>`).join("");
-  sel.value = list.some(([s, c]) => `${s}|${c}` === keep) ? keep : "";
-}
-fillCounties();
-function segBind(id, key, after) {
-  $(id).querySelectorAll("button").forEach(b => b.onclick = () => {
-    $(id).querySelectorAll("button").forEach(x => x.classList.toggle("on", x === b));
-    F[key] = b.dataset.v; after && after();
-  });
-}
-segBind("fState", "state", fillCounties);
-segBind("fWinner", "winner");
-
-function openFilters(open) {
-  if (open) { $("basePanel").classList.remove("open"); $("rBase").setAttribute("aria-expanded", "false"); openRacePanel(false); }
-  $("filters").classList.toggle("open", open);
-  $("filterBtn").classList.toggle("open", open);
-  $("filterBtn").setAttribute("aria-expanded", open);
-}
-$("filterBtn").onclick = () => openFilters(!$("filters").classList.contains("open"));
-
-function panelFilter() {
-  const t = [], tags = [];
-  const add = (fn, tag) => { t.push(fn); tags.push(tag); };
-  F.county = $("fCounty").value; F.min = $("fMin").value; F.max = $("fMax").value; F.close = $("fClose").checked;
-  if (F.state) add(p => p.s === F.state, F.state === "UT" ? "Utah" : "Wyoming");
-  if (F.county) { const [s, c] = F.county.split("|"); add(p => p.s === s && p.c === c, `${c} County`); }
-  const RL = $("fWinR").textContent, DL = $("fWinD").textContent;
-  if (F.winner === "r") add(p => p.m < 0, `${RL} won`);
-  if (F.winner === "d") add(p => p.m > 0, `${DL} won`);
-  if (F.min !== "") { const v = +F.min / 100; add(p => p.r / p.t >= v, `${RL} ≥ ${F.min}%`); }
-  if (F.max !== "") { const v = +F.max / 100; add(p => p.r / p.t <= v, `${RL} ≤ ${F.max}%`); }
-  if (F.close) add(p => Math.abs(p.m) <= 0.1, "Within 10 pts");
-  return { tests: t, tags };
-}
-function updateCount(n) { $("filterCount").textContent = n; $("filterCount").classList.toggle("show", n > 0); }
-$("fApply").onclick = () => { const f = panelFilter(); openFilters(false); applyTests(f.tests, f.tags, "your filters"); };
-$("fReset").onclick = () => {
-  Object.assign(F, { state: "", county: "", winner: "", min: "", max: "", close: false });
-  ["fState", "fWinner"].forEach(id => $(id).querySelectorAll("button").forEach((b, i) => b.classList.toggle("on", i === 0)));
-  $("fMin").value = ""; $("fMax").value = ""; $("fClose").checked = false; fillCounties(); $("fCounty").value = "";
 };
 
 // ---------- Search box (plain-English) ----------
@@ -675,7 +575,7 @@ function parseQuery(raw) {
   const names = side => [...new Set((precinctData && race !== "p2024" ? precinctData.features : []).map(f => f.properties[side]).filter(Boolean).map(n => short(n).toLowerCase()))].join("|");
   const RW = ["trump|republicans?|gop|red|against", RACES[race].r.toLowerCase(), names("rn")].filter(Boolean).join("|");
   const DW = ["harris|democrats?|democratic|dems?|blue|for", RACES[race].d.toLowerCase(), names("dn")].filter(Boolean).join("|");
-  const RL = $("fWinR").textContent, DL = $("fWinD").textContent;
+  const RL = LBL.r, DL = LBL.d;
   if (new RegExp(`\\b(${RW})\\s+(won|wins|win|carried|passed|precincts?)\\b`).test(q)) add(p => p.m < 0, `${RL} won`);
   if (new RegExp(`\\b(${DW})\\s+(won|wins|win|carried|passed|precincts?)\\b`).test(q)) add(p => p.m > 0, `${DL} won`);
   const share = new RegExp(`\\b(${RW}|${DW})\\s+(?:is\\s+|got\\s+|with\\s+)?(over|above|more than|greater than|at least|>=|>|under|below|less than|at most|<=|<)\\s*(\\d+(?:\\.\\d+)?)\\s*(?:%|percent)?`, "g");
@@ -702,12 +602,11 @@ async function applyTests(tests, tags, label) {
   await loadPrecincts();
   filterFn = p => tests.every(t => t(p));
   precincts.setStyle(precinctStyle);
-  updateCount(tags.length);
   const hits = precinctData.features.filter(f => filterFn(f.properties));
   if (!hits.length) return showResult(`No precincts match ${label}.`, tags);
   let r = 0, d = 0, t = 0;
   hits.forEach(f => { r += f.properties.r; d += f.properties.d; t += f.properties.t; });
-  showResult(`<b>${fmt(hits.length)}</b> precincts · ${fmt(t)} votes · ${$("fWinR").textContent} ${pct(r, t).toFixed(1)}% · ${$("fWinD").textContent} ${pct(d, t).toFixed(1)}%`, tags);
+  showResult(`<b>${fmt(hits.length)}</b> precincts · ${fmt(t)} votes · ${LBL.r} ${pct(r, t).toFixed(1)}% · ${LBL.d} ${pct(d, t).toFixed(1)}%`, tags);
   map.fitBounds(L.geoJSON({ type: "FeatureCollection", features: hits }).getBounds(), { padding: [60, 60], maxZoom: 12 });
 }
 
@@ -741,21 +640,21 @@ function showResult(html, tags) {
   $("result").classList.add("show");
 }
 function clearFilter() {
-  filterFn = null; lastQuery = null; precincts.setStyle(precinctStyle); updateCount(0);
+  filterFn = null; lastQuery = null; precincts.setStyle(precinctStyle);
   $("result").classList.remove("show"); $("askInput").value = "";
 }
 $("ask").onsubmit = e => {
-  e.preventDefault(); openFilters(false);
+  e.preventDefault();
   const raw = $("askInput").value; if (!raw.trim()) return;
   const code = raw.trim().match(/^(?:precinct\s+)?([a-z]{0,3}\d[\w-]*)$/i);
   if (code) return findPrecinct(code[1]);
   const parsed = parseQuery(raw);
   parsed.place ? goToPlace(parsed.place) : applyTests(parsed.tests, parsed.tags, `“${raw}”`);
 };
-$("clearBtn").onclick = () => { clearFilter(); $("fReset").click(); };
+$("clearBtn").onclick = () => clearFilter();
 
 // Close menus when clicking the map
-map.on("click", () => { openFilters(false); $("basePanel").classList.remove("open"); openRacePanel(false); if (phoneMQ.matches) openTotals(false); });
+map.on("click", () => { $("basePanel").classList.remove("open"); openRacePanel(false); if (phoneMQ.matches) openTotals(false); });
 // Shorter search hint on small screens
 const phoneMQ = matchMedia("(max-width: 760px), (max-height: 500px)");
 const longHint = $("askInput").placeholder;
