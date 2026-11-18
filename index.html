@@ -135,7 +135,7 @@
   .baseOpt.on { border: 2px solid var(--red); background: var(--red-soft); color: #7f1d1d; font-weight: 700; }
 
   /* ---------- Legends ---------- */
-  #legends { position: absolute; right: 16px; bottom: 112px; z-index: 1000; display: flex; flex-direction: column; gap: 8px; align-items: flex-end; }
+  #legends { position: absolute; right: 16px; bottom: 28px; z-index: 1000; display: flex; flex-direction: column; gap: 8px; align-items: flex-end; }
   .legend { display: none; background: white; border-radius: 12px; box-shadow: var(--shadow); padding: 10px 12px; font-size: 11px; color: #475569; width: 220px; }
   .legend.show { display: block; }
   .legend b { display: block; font-size: 12px; color: var(--text); margin-bottom: 6px; }
@@ -207,7 +207,7 @@
 
     /* Bottom of the map: legends left (above the scale), pinch to zoom instead of +/- */
     .leaflet-control-zoom { display: none; }
-    #legends { left: calc(10px + env(safe-area-inset-left)); right: auto; bottom: calc(58px + env(safe-area-inset-bottom)); align-items: flex-start; }
+    #legends { right: calc(10px + env(safe-area-inset-right)); bottom: calc(44px + env(safe-area-inset-bottom)); }
     .leaflet-control-attribution { font-size: 9px; line-height: 1.35; }
     .legend { width: 200px; }
     .leaflet-bottom { margin-bottom: env(safe-area-inset-bottom); }
@@ -350,8 +350,8 @@ const baseMaps = {
   USGS: L.tileLayer("https://basemap.nationalmap.gov/arcgis/rest/services/USGSTopo/MapServer/tile/{z}/{y}/{x}", { ...fast, maxNativeZoom: 16, maxZoom: 19, attribution: "USGS The National Map" })
 };
 const map = L.map("map", { layers: [baseMaps.Topo], preferCanvas: true, zoomControl: false });
-L.control.zoom({ position: "bottomright" }).addTo(map);
 L.control.scale({ imperial: true, metric: false, position: "bottomleft" }).addTo(map);
+L.control.zoom({ position: "bottomleft" }).addTo(map); // map key sits in the bottom-right corner
 
 let currentBase = baseMaps.Topo;
 document.querySelectorAll(".baseOpt").forEach(b => b.onclick = () => {
