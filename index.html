@@ -5,6 +5,12 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Land Finder — Utah & Wyoming</title>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<!-- Open connections to the map servers early so the first tiles arrive faster -->
+<link rel="preconnect" href="https://server.arcgisonline.com" crossorigin>
+<link rel="preconnect" href="https://services.arcgisonline.com" crossorigin>
+<link rel="preconnect" href="https://gis.blm.gov" crossorigin>
+<link rel="preconnect" href="https://basemap.nationalmap.gov" crossorigin>
+<link rel="preconnect" href="https://a.tile.openstreetmap.org" crossorigin>
 <style>
   html, body { margin: 0; height: 100%; font-family: system-ui, sans-serif; }
   #map { position: absolute; inset: 0; }
@@ -32,20 +38,28 @@
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
+// ---------- Speed settings shared by every layer ----------
+// updateWhenZooming:false -> don't fetch tiles for the in-between zoom levels, only where you land
+// keepBuffer:6            -> keep more already-loaded tiles around the edges so panning back is instant
+const fast = { updateWhenZooming: false, keepBuffer: 6 };
+
 // ---------- Base maps ----------
 const baseMaps = {
-  "Streets": L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-    maxZoom: 19, attribution: "&copy; OpenStreetMap contributors"
+  "Topo": L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}", {
+    ...fast, maxZoom: 19, attribution: "Topo &copy; Esri, USGS"
   }),
   "Satellite": L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}", {
-    maxZoom: 19, attribution: "Imagery &copy; Esri"
+    ...fast, maxZoom: 19, attribution: "Imagery &copy; Esri"
   }),
-  "Topo": L.tileLayer("https://basemap.nationalmap.gov/arcgis/rest/services/USGSTopo/MapServer/tile/{z}/{y}/{x}", {
-    maxZoom: 16, attribution: "USGS The National Map"
+  "Streets": L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+    ...fast, maxZoom: 19, attribution: "&copy; OpenStreetMap contributors"
+  }),
+  "USGS Topo (detailed, slower)": L.tileLayer("https://basemap.nationalmap.gov/arcgis/rest/services/USGSTopo/MapServer/tile/{z}/{y}/{x}", {
+    ...fast, maxNativeZoom: 16, maxZoom: 19, attribution: "USGS The National Map"
   })
 };
 
-const map = L.map("map", { layers: [baseMaps["Topo"]] });
+const map = L.map("map", { layers: [baseMaps["Topo"]], preferCanvas: true });
 
 // ---------- State outlines (simplified boundaries) ----------
 const states = {
@@ -69,7 +83,7 @@ map.fitBounds(stateLayer.getBounds(), { padding: [20, 20] });
 // ---------- Overlays ----------
 const landOwnership = L.tileLayer(
   "https://gis.blm.gov/arcgis/rest/services/lands/BLM_Natl_SMA_Cached_without_PriUnk/MapServer/tile/{z}/{y}/{x}",
-  { maxZoom: 19, opacity: 0.55, attribution: "BLM Surface Management Agency" }
+  { ...fast, maxZoom: 19, opacity: 0.55, attribution: "BLM Surface Management Agency" }
 );
 
 const overlays = {
